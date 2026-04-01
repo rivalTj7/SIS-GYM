@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BURN — Rutina Quema Grasa</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f2eb;
+  --surface: #edeae0;
+  --card: #ffffff;
+  --border: #d4cfc0;
+  --accent: #e63946;
+  --accent2: #f4a261;
+  --dark: #1a1a1a;
+  --text: #1a1a1a;
+  --muted: #8a8070;
+  --gym-color: #e63946;
+  --home-color: #f4a261;
+  --rest-color: #4caf8a;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* TEXTURE */
+body::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23f5f2eb'/%3E%3Ccircle cx='1' cy='1' r='0.6' fill='%23d4cfc0' opacity='0.4'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+  opacity:0.6;
+}
+
+/* =================== TOP NAV =================== */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-bottom: 1.5px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 26px;
+  letter-spacing: 4px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.brand span { color: var(--dark); }
+
+.week-progress-pill {
+  background: var(--dark);
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+/* =================== HERO =================== */
+.hero {
+  position: relative;
+  z-index: 1;
+  padding: 36px 20px 28px;
+  border-bottom: 1.5px solid var(--border);
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.hero-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(56px, 15vw, 88px);
+  line-height: 0.88;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+}
+
+.hero-title .line2 { color: var(--accent); }
+
+.hero-desc {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 340px;
+}
+
+.stats-row {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-item { }
+.stat-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0;
+  color: var(--dark);
+}
+.stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* =================== DAY TABS =================== */
+.day-tabs {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--bg);
+}
+.day-tabs::-webkit-scrollbar { display: none; }
+
+.day-tab {
+  flex-shrink: 0;
+  padding: 14px 16px 12px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  text-align: center;
+  position: relative;
+}
+
+.day-tab.active-tab { border-bottom-color: var(--accent); }
+.day-tab.tab-gym.active-tab { border-bottom-color: var(--gym-color); }
+.day-tab.tab-home.active-tab { border-bottom-color: var(--home-color); }
+.day-tab.tab-rest.active-tab { border-bottom-color: var(--rest-color); }
+
+.tab-day {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.day-tab.active-tab.tab-gym .tab-day { color: var(--gym-color); }
+.day-tab.active-tab.tab-home .tab-day { color: var(--home-color); }
+.day-tab.active-tab.tab-rest .tab-day { color: var(--rest-color); }
+
+.tab-type {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--border);
+  margin-top: 2px;
+}
+
+.day-tab.active-tab .tab-type { color: var(--muted); }
+
+.done-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--rest-color);
+  border-radius: 50%;
+}
+
+/* =================== SESSION PANEL =================== */
+.session-panel {
+  position: relative;
+  z-index: 1;
+  padding: 0 20px;
+}
+
+/* Session header */
+.session-header {
+  padding: 24px 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.session-left { }
+
+.session-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.badge-gym { background: #fdecea; color: var(--gym-color); }
+.badge-home { background: #fff4e8; color: var(--home-color); }
+.badge-rest { background: #e8f5f0; color: var(--rest-color); }
+
+.session-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.session-duration {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.session-progress-wrap {
+  text-align: right;
+}
+
+.session-pct {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.session-pct-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* =================== TIMER =================== */
+.timer-card {
+  background: var(--dark);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.timer-label-txt {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.timer-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #e8ff47;
+  line-height: 1;
+  transition: color 0.3s;
+}
+
+.timer-num.warn { color: #ff6b35; }
+
+.timer-hint {
+  font-size: 11px;
+  color: #555;
+  margin-top: 4px;
+}
+
+.timer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.timer-svg { }
+
+.t-btn {
+  background: #e8ff47;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.t-btn:active { transform: scale(0.96); }
+.t-btn.stop { background: #ff6b35; color: #fff; }
+
+.presets {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.preset {
+  flex: 1;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 8px 4px;
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.preset.on {
+  border-color: var(--dark);
+  color: var(--dark);
+  background: #fff;
+}
+
+/* =================== BLOCKS =================== */
+.block-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 20px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.block-title::after {
+  content:'';
+  flex:1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* =================== EXERCISE CARDS =================== */
+.ex-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+}
+
+.ex-card.done-card {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.ex-main {
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ex-indicator {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.ind-gym { background: var(--gym-color); }
+.ind-home { background: var(--home-color); }
+.ind-rest { background: var(--rest-color); }
+
+.ex-body { flex: 1; }
+
+.ex-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+
+.ex-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.chip-sets { background: #f0eee8; color: var(--muted); }
+.chip-reps { background: #fdecea; color: var(--gym-color); }
+.chip-rest { background: #f0eee8; color: var(--muted); }
+.chip-home { background: #fff4e8; color: var(--home-color); }
+
+.ex-check {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fff;
+  color: transparent;
+}
+
+.ex-card.done-card .ex-check {
+  background: var(--rest-color);
+  border-color: var(--rest-color);
+  color: #fff;
+}
+
+/* Expanded */
+.ex-detail {
+  display: none;
+  padding: 0 16px 14px 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.ex-card.expanded .ex-detail { display: block; }
+
+.tip-text {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.tip-text strong { color: var(--dark); }
+
+.errors-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.error-item {
+  background: #fdecea;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.error-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gym-color);
+  margin-bottom: 2px;
+}
+
+.error-text {
+  font-size: 11px;
+  color: var(--dark);
+  line-height: 1.4;
+}
+
+.btn-yt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1.5px solid #e0dddd;
+  color: #cc0000;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Syne', sans-serif;
+}
+
+.btn-yt:hover { border-color: #cc0000; background: #fff5f5; }
+
+/* =================== SUPERSET BADGE =================== */
+.superset-wrap {
+  position: relative;
+  padding-left: 16px;
+  margin-bottom: 10px;
+}
+
+.superset-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--gym-color);
+  opacity: 0.3;
+}
+
+.superset-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gym-color);
+  margin-bottom: 4px;
+  padding-left: 0;
+}
+
+/* =================== COMPLETE BTN =================== */
+.complete-wrap {
+  padding: 28px 0 60px;
+}
+
+.complete-btn {
+  width: 100%;
+  background: var(--dark);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 20px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.complete-btn:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.complete-btn:not(:disabled):hover { background: var(--accent); }
+
+/* =================== REST OVERLAY =================== */
+.rest-ov {
+  position: fixed;
+  inset: 0;
+  background: var(--dark);
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px;
+}
+
+.rest-ov.on { display: flex; }
+
+.rest-ov-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.rest-ov-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 130px;
+  font-weight: 900;
+  line-height: 1;
+  color: #e8ff47;
+  transition: color 0.3s;
+}
+
+.rest-ov-num.warn { color: #ff6b35; }
+
+.rest-ov-next {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #555;
+}
+
+.rest-ov-next strong { color: #aaa; }
+
+.btn-skip {
+  margin-top: 32px;
+  background: transparent;
+  border: 1.5px solid #333;
+  color: #555;
+  border-radius: 10px;
+  padding: 12px 32px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-skip:hover { border-color: #e8ff47; color: #e8ff47; }
+
+/* =================== VIDEO MODAL =================== */
+.vid-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 300;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.vid-modal.on { display: flex; }
+
+.vid-header {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.vid-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.vid-close {
+  background: #1a1a1a;
+  border: 1.5px solid #333;
+  color: #666;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.vid-close:hover { color: #fff; border-color: #fff; }
+
+.vid-wrap {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.vid-wrap iframe { width: 100%; height: 100%; border: none; }
+
+.vid-sub {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #555;
+  max-width: 400px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* =================== TOAST =================== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--dark);
+  color: #e8ff47;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  z-index: 400;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  white-space: nowrap;
+}
+
+.toast.on { transform: translateX(-50%) translateY(0); }
+
+/* =================== REST DAY =================== */
+.rest-day-panel {
+  padding: 40px 0;
+  text-align: center;
+}
+
+.rest-day-icon { font-size: 60px; display: block; margin-bottom: 20px; }
+
+.rest-day-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--rest-color);
+  margin-bottom: 10px;
+}
+
+.rest-day-desc {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 280px;
+  margin: 0 auto 24px;
+}
+
+.mobility-list {
+  text-align: left;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.mob-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--dark);
+  font-weight: 600;
+}
+
+.mob-item:last-child { border-bottom: none; }
+.mob-icon { font-size: 18px; }
+.mob-detail { font-size: 11px; color: var(--muted); font-weight: 400; }
+
+@keyframes fadeIn {
+  from { opacity:0; transform: translateY(6px); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+.session-panel { animation: fadeIn 0.25s ease; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">BURN<span> GT</span></div>
+  <div class="week-progress-pill" id="weekPill">0/7 días</div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Objetivo · Quemar Grasa · 90 min/sesión</div>
+  <div class="hero-title">
+    RUTINA<br><span class="line2">DIARIA</span>
+  </div>
+  <div class="hero-desc">7 días de entrenamiento estructurado. Gym para fuerza metabólica, casa para HIIT. Sin días muertos.</div>
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-num">7</div>
+      <div class="stat-label">Días activos</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">~600</div>
+      <div class="stat-label">Kcal / sesión</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">90</div>
+      <div class="stat-label">Min por día</div>
+    </div>
+  </div>
+</div>
+
+<!-- DAY TABS -->
+<div class="day-tabs" id="dayTabs"></div>
+
+<!-- SESSION PANEL -->
+<div class="session-panel" id="sessionPanel"></div>
+
+<!-- REST OVERLAY -->
+<div class="rest-ov" id="restOv">
+  <div class="rest-ov-label">RECUPERANDO</div>
+  <div class="rest-ov-num" id="restOvNum">60</div>
+  <div class="rest-ov-next" id="restOvNext"><strong>¡Excelente!</strong> Siguiente ejercicio en breve...</div>
+  <button class="btn-skip" onclick="skipRest()">SALTAR →</button>
+</div>
+
+<!-- VIDEO MODAL -->
+<div class="vid-modal" id="vidModal">
+  <div class="vid-header">
+    <div class="vid-title" id="vidTitle">TÉCNICA</div>
+    <button class="vid-close" onclick="closeVid()">✕</button>
+  </div>
+  <div class="vid-wrap">
+    <iframe id="vidIframe" src="" allowfullscreen allow="autoplay"></iframe>
+  </div>
+  <div class="vid-sub" id="vidSub"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA — 7-day fat loss plan
+// ============================================================
+const PLAN = [
+  // ── LUNES: GYM — Tren Superior (Push/Pull Superset)
+  {
+    day: 'LUN', label: 'TREN SUPERIOR', type: 'gym', duration: '90 min',
+    focus: 'Pecho · Espalda · Hombros · Bíceps · Tríceps',
+    blocks: [
+      {
+        title: 'CALENTAMIENTO',
+        exercises: [
+          { name: 'Remo en máquina / Bicicleta estática', sets: 1, reps: '10 min', restSec: 0, videoId: 'nMNMFiCqxZ8', videoSub: 'Ritmo moderado, sube la frecuencia cardiaca gradualmente.', tip: 'Empieza suave. Los primeros 3 minutos al 50%, luego sube al 70% de tu capacidad. Esto protege las articulaciones y prepara el sistema cardíaco.', errors: [] }
+        ]
+      },
+      {
+        title: 'SUPERSET A — PECHO + ESPALDA', superset: true,
+        exercises: [
+          { name: 'Press de Banca (Barra)', sets: 4, reps: '10', restSec: 0, videoId: 'rT7DgCr-3pg', videoSub: 'Observa el arco, escápulas retraídas y control en la bajada.', tip: 'Baja la barra hasta rozar el pecho. Agarre ligeramente más ancho que hombros. Escápulas juntas durante todo el movimiento.', errors: [{ label: '❌ Error común', text: 'Rebotar la barra en el pecho. Baja controlado 2-3 seg.' }, { label: '❌ Error común', text: 'Levantar las nalgas del banco. Mantén contacto total.' }] },
+          { name: 'Jalón al Pecho (Polea)', sets: 4, reps: '12', restSec: 60, videoId: 'CAwf7n6Luuc', videoSub: 'Inclina el torso 15°, barra al pecho, junta escápulas.', tip: 'Baja la barra al pecho, no al ombligo. Inclina el torso 15° atrás. Al terminar la bajada, contrae la espalda 1 segundo.', errors: [{ label: '❌ Error común', text: 'Barra detrás de la nuca → lesión cervical.' }, { label: '❌ Error común', text: 'Usar el peso del cuerpo para jalar. Mantén torso estable.' }] }
+        ]
+      },
+      {
+        title: 'SUPERSET B — HOMBROS + ESPALDA', superset: true,
+        exercises: [
+          { name: 'Press Militar (Mancuernas)', sets: 4, reps: '10', restSec: 0, videoId: 'qEwKCR5JCog', videoSub: 'Espalda neutra, codos a 90° al inicio, sube sin bloquear.', tip: 'Sentado o de pie. Mancuernas a la altura de los hombros con codos a 90°. Sube sin bloquear codos. Baja controlado.', errors: [{ label: '❌ Error común', text: 'Arquearse de la espalda baja. Activa el core siempre.' }, { label: '❌ Error común', text: 'Bloquear codos arriba → tensión articular.' }] },
+          { name: 'Remo con Mancuerna', sets: 4, reps: '12 x brazo', restSec: 60, videoId: 'roCP6wCXPqo', videoSub: 'Codo al techo, contrae espalda en el tope, baja controlado.', tip: 'Apoya rodilla y mano en banco. Lleva el codo HACIA ARRIBA, no hacia el lado. Contrae la espalda en el punto más alto.', errors: [{ label: '❌ Error común', text: 'Rotar el torso al jalar. Mantenlo paralelo al suelo.' }, { label: '❌ Error común', text: 'Jalar con el bíceps, no con la espalda. Piensa en el codo.' }] }
+        ]
+      },
+      {
+        title: 'SUPERSET C — BÍCEPS + TRÍCEPS',  superset: true,
+        exercises: [
+          { name: 'Curl de Bíceps (Mancuernas)', sets: 3, reps: '12', restSec: 0, videoId: 'av7-8igSXTs', videoSub: 'Codos pegados al cuerpo, supinación al subir, baja lento.', tip: 'Codos fijos pegados al cuerpo. Sube girando la muñeca (supinación). Baja en 3 segundos. No balancees el torso.', errors: [{ label: '❌ Error', text: 'Balancear el cuerpo para subir el peso. Reduce el peso.' }, { label: '❌ Error', text: 'Subir solo 3/4 del recorrido. Extensión completa abajo.' }] },
+          { name: 'Extensión de Tríceps (Polea)', sets: 3, reps: '12', restSec: 60, videoId: 'vB5OHsJ3EMc', videoSub: 'Codos pegados, solo el antebrazo se mueve, baja controlado.', tip: 'Codos pegados a los costados. Solo el antebrazo se mueve. Al bajar, detente sin bloquear. Sube hasta 90° máximo.', errors: [{ label: '❌ Error', text: 'Mover los codos hacia adelante. Son un punto fijo.' }, { label: '❌ Error', text: 'Usar impulso del cuerpo. Aísla el tríceps.' }] }
+        ]
+      },
+      {
+        title: 'FINISHER — CARDIO HIIT',
+        exercises: [
+          { name: 'Elíptica / Caminadora Inclinada', sets: 1, reps: '20 min', restSec: 0, videoId: 'xSoHPV-GSXM', videoSub: 'Intervalos: 1 min intenso, 1 min moderado. Repite 10 veces.', tip: 'Protocolo: 1 minuto al 80% de esfuerzo + 1 minuto al 50%. Repite 10 ciclos. Esto es HIIT y quema más grasa que cardio constante.', errors: [] }
+        ]
+      }
+    ]
+  },
+
+  // ── MARTES: CASA — HIIT Full Body
+  {
+    day: 'MAR', label: 'HIIT FULL BODY', type: 'home', duration: '45–50 min',
+    focus: 'Quema de grasa máxima · Sin equipamiento',
+    blocks: [
+      {
+        title: 'CALENTAMIENTO — 5 min',
+        exercises: [
+          { name: 'Trote en el lugar + Rotaciones', sets: 1, reps: '5 min', restSec: 0, videoId: 'rjU_xxLv_7c', videoSub: 'Eleva rodillas, mueve brazos, activa todo el cuerpo progresivamente.', tip: 'Alterna trote en el lugar 30 seg → rotación de cadera 30 seg → jumping jacks 30 seg. Repite hasta completar 5 min.', errors: [] }
+        ]
+      },
+      {
+        title: 'CIRCUITO 1 — Potencia (4 vueltas, 1 min descanso)',
+        exercises: [
+          { name: 'Burpees con Salto', sets: 4, reps: '15 reps', restSec: 0, videoId: 'dZgVxmf6jkA', videoSub: 'Secuencia: plancha → flexión → salto explosivo con brazos arriba.', tip: 'Plancha → flexión → salta los pies hacia las manos → salta explosivo con brazos al cielo. Aterriza suave con rodillas semiflexionadas.', errors: [{ label: '❌ Error', text: 'Cadera arriba en la plancha. Mantén cuerpo recto.' }, { label: '❌ Error', text: 'Aterrizar con piernas rectas → impacto en rodillas.' }] },
+          { name: 'Sentadilla con Salto', sets: 4, reps: '20 reps', restSec: 0, videoId: 'CVaEhXotL7M', videoSub: 'Baja a 90°, salta lo más alto posible, aterriza suave y continúa.', tip: 'Baja hasta que muslos queden paralelos al suelo. Explota hacia arriba. Aterriza con rodillas ligeramente flexionadas para amortiguar.', errors: [{ label: '❌ Error', text: 'Rodillas hacia adentro al aterrizar → lesión.' }, { label: '❌ Error', text: 'Medio squat solo. Baja hasta los 90° completos.' }] },
+          { name: 'Mountain Climbers', sets: 4, reps: '45 seg', restSec: 60, videoId: 'nmwgirgXLYM', videoSub: 'Cadera baja, ritmo máximo, rodillas al pecho alternando.', tip: 'Posición de plancha alta. Cadera abajo y estable. Lleva cada rodilla al pecho lo más rápido posible. Respira constantemente.', errors: [{ label: '❌ Error', text: 'Cadera arriba tipo pike. Bájala al nivel del cuerpo.' }, { label: '❌ Error', text: 'Aguantar la respiración. Exhala con cada rodillazo.' }] }
+        ]
+      },
+      {
+        title: 'CIRCUITO 2 — Resistencia (3 vueltas)',
+        exercises: [
+          { name: 'Flexiones (Push-ups)', sets: 3, reps: '45 seg máx', restSec: 0, videoId: 'IODxDxX7oi4', videoSub: 'Cuerpo recto, pecho al suelo, codos a 45° del cuerpo.', tip: 'Cuerpo recto como tabla desde cabeza hasta talones. Pecho roza el suelo. Si fallas: rodillas en tierra. Nunca rompas la forma.', errors: [{ label: '❌ Error', text: 'Cadera hundida o levantada. Activa el core.' }, { label: '❌ Error', text: 'Codos hacia afuera a 90°. Mantenlos a 45° del cuerpo.' }] },
+          { name: 'Zancadas Alternas (Lunges)', sets: 3, reps: '20 pasos', restSec: 0, videoId: 'QOVaHwm-Q6U', videoSub: 'Paso largo, rodilla trasera baja sin tocar suelo, torso erguido.', tip: '10 por pierna alternando. Paso largo hacia adelante. Rodilla trasera a 2 cm del suelo sin tocar. Torso completamente erguido.', errors: [{ label: '❌ Error', text: 'Inclinarse hacia adelante con el torso.' }, { label: '❌ Error', text: 'Rodilla delantera pasa los dedos del pie → estrés.' }] },
+          { name: 'Plancha Abdominal', sets: 3, reps: '60 seg', restSec: 60, videoId: 'ASdvN_XEl_c', videoSub: 'Codos bajo hombros, glúteos contraídos, línea recta perfecta.', tip: 'Codos directamente bajo los hombros. Contrae abdomen Y glúteos simultáneamente. Mira el suelo 20 cm adelante. Respira.', errors: [{ label: '❌ Error', text: 'Cadera arriba tipo tienda de campaña.' }, { label: '❌ Error', text: 'Cadera abajo colgando. Ambos extremos son errores.' }] }
+        ]
+      },
+      {
+        title: 'CORE FINISHER (1 vuelta)',
+        exercises: [
+          { name: 'Crunches + Bicicleta + Leg Raises', sets: 1, reps: '20+20+15 reps c/u', restSec: 0, videoId: 'iUIyd5HNTCA', videoSub: 'Los 3 ejercicios sin descanso entre ellos. Exhala al contraer.', tip: '20 crunches → 20 bicicletas (10 por lado) → 15 elevaciones de piernas. Sin parar entre los 3. Exhala al contraer el abdomen.', errors: [] }
+        ]
+      }
+    ]
+  },
+
+  // ── MIÉRCOLES: GYM — Tren Inferior + Glúteos
+  {
+    day: 'MIÉ', label: 'TREN INFERIOR', type: 'gym', duration: '90 min',
+    focus: 'Cuádriceps · Glúteos · Isquiotibiales · Pantorrillas',
+    blocks: [
+      {
+        title: 'CALENTAMIENTO',
+        exercises: [
+          { name: 'Bicicleta Estática', sets: 1, reps: '10 min', restSec: 0, videoId: 'nMNMFiCqxZ8', videoSub: 'Aumenta la resistencia progresivamente cada 2 minutos.', tip: 'Los primeros 3 min al 50%, luego sube a un ritmo donde puedas hablar pero con esfuerzo. Activa las piernas antes de cargar peso.', errors: [] }
+        ]
+      },
+      {
+        title: 'BLOQUE PRINCIPAL — PIERNAS',
+        exercises: [
+          { name: 'Sentadilla con Barra (Back Squat)', sets: 5, reps: '10', restSec: 90, videoId: 'ultWZbUMPL8', videoSub: 'Espalda neutra, rodillas sobre pies, baja hasta paralelo.', tip: 'El ejercicio king de pierna. Barra sobre trapecios. Pies al ancho de hombros. Baja hasta que muslos queden paralelos. Empuja el suelo al subir.', errors: [{ label: '❌ Error', text: 'Rodillas hacia adentro (valgo). Empújalas hacia afuera.' }, { label: '❌ Error', text: 'Espalda redondeada. Pecho arriba, mira al frente.' }] },
+          { name: 'Prensa de Piernas', sets: 4, reps: '12', restSec: 60, videoId: 'GvRgijoJ2xY', videoSub: 'Pies al ancho de hombros, baja a 90°, espalda baja pegada.', tip: 'Pies a la anchura de hombros en el centro de la plataforma. Baja hasta 90° sin despegar la espalda baja del respaldo. Empuja con el talón.', errors: [{ label: '❌ Error', text: 'Bloquear rodillas arriba → impacto articular.' }, { label: '❌ Error', text: 'Espalda baja se despega al bajar demasiado el peso.' }] }
+        ]
+      },
+      {
+        title: 'SUPERSET D — GLÚTEOS + ISQUIOS', superset: true,
+        exercises: [
+          { name: 'Hip Thrust (Barra o Mancuerna)', sets: 4, reps: '15', restSec: 0, videoId: 'SEdqd1n0cvg', videoSub: 'Empuje desde el talón, glúteo en el tope, baja controlado.', tip: 'Espalda en el banco. Barra sobre cadera. Empuja desde los talones hasta que cuerpo quede recto. Contrae el glúteo 1 segundo arriba.', errors: [{ label: '❌ Error', text: 'Hiperextender la espalda baja arriba. Solo pelvis.' }, { label: '❌ Error', text: 'No llegar a extensión completa → glúteo no se activa.' }] },
+          { name: 'Curl de Isquiotibiales (Máquina)', sets: 4, reps: '12', restSec: 60, videoId: 'Orxowest56U', videoSub: 'Control en la bajada, rango completo, sin rebote.', tip: 'Baja en 3 segundos. Llega a la extensión completa. Sube explosivo. El músculo se trabaja más bajando que subiendo. No uses impulso.', errors: [{ label: '❌ Error', text: 'Levantar las caderas del asiento al jalar.' }, { label: '❌ Error', text: 'No bajar completamente → rango parcial ineficaz.' }] }
+        ]
+      },
+      {
+        title: 'AISLAMIENTO',
+        exercises: [
+          { name: 'Extensión de Cuádriceps (Máquina)', sets: 3, reps: '15', restSec: 45, videoId: '4ZDm5EbBAQY', videoSub: 'Sube explosivo, baja en 3 segundos, rango completo.', tip: 'No uses demasiado peso. El objetivo es sentir el quemón en el cuádricep. Extensión completa arriba, baja lento.', errors: [] },
+          { name: 'Pantorrillas de Pie (Máquina / Escalón)', sets: 4, reps: '20', restSec: 30, videoId: 'gwLzBJYoWlQ', videoSub: 'Sube en 2 seg, mantén 1 seg arriba, baja en 3 seg completo.', tip: 'Rango completo obligatorio: talón abajo del nivel del escalón, luego punta máximo arriba. Las pantorrillas requieren rango y volumen.', errors: [] }
+        ]
+      },
+      {
+        title: 'FINISHER CARDIO',
+        exercises: [
+          { name: 'Caminadora Inclinada al 10–12%', sets: 1, reps: '20 min', restSec: 0, videoId: 'xSoHPV-GSXM', videoSub: 'Inclinación alta, ritmo caminata, activa glúteos y quema calorías.', tip: 'Velocidad: 5-6 km/h. Inclinación: 10-12%. NO te agarres del pasamanos. Brazos en movimiento natural. Excelente quema de grasa post-pierna.', errors: [] }
+        ]
+      }
+    ]
+  },
+
+  // ── JUEVES: CASA — HIIT Cardio + Core
+  {
+    day: 'JUE', label: 'CARDIO + CORE', type: 'home', duration: '45–50 min',
+    focus: 'Cardio HIIT · Abdomen · Oblicuos',
+    blocks: [
+      {
+        title: 'ACTIVACIÓN — 5 min',
+        exercises: [
+          { name: 'Jumping Jacks + Rotación de Cadera', sets: 1, reps: '5 min', restSec: 0, videoId: 'iSSAk4XCsRA', videoSub: 'Alterna ejercicios de bajo impacto para calentar articulaciones.', tip: '30 seg Jumping Jacks → 30 seg rotación de cadera cada lado → 30 seg trote en el lugar. Repite 3 veces.', errors: [] }
+        ]
+      },
+      {
+        title: 'TABATA CARDIO (8 rondas × 20+10 seg)',
+        exercises: [
+          { name: 'Tabata: Burpees + Descanso', sets: 8, reps: '20 seg max / 10 seg descanso', restSec: 60, videoId: 'dZgVxmf6jkA', videoSub: 'Protocolo Tabata: 20 seg a tope, 10 seg pausa. 8 rondas = 4 min.', tip: '8 rondas completas. Los primeros 4 te van a parecer fácil. Los últimos 4 van a doler. Eso es exactamente el objetivo. 4 minutos totales.', errors: [{ label: '⚡ Tip', text: 'Si no aguantas burpees, cambia a jumping jacks en las últimas rondas.' }, { label: '⚡ Tip', text: 'El 10 seg de descanso es mínimo. No te sientes.' }] },
+          { name: 'Tabata: Sentadilla con Salto', sets: 8, reps: '20 seg max / 10 seg descanso', restSec: 90, videoId: 'CVaEhXotL7M', videoSub: '20 seg explosivos, 10 seg pausa, 8 rondas consecutivas.', tip: 'Misma estructura: 20 seg saltando, 10 seg pausa. Mantén la profundidad de la sentadilla aunque el ritmo baje al final.', errors: [] }
+        ]
+      },
+      {
+        title: 'BLOQUE CORE COMPLETO (3 vueltas)',
+        exercises: [
+          { name: 'Plancha Lateral (ambos lados)', sets: 3, reps: '45 seg × lado', restSec: 0, videoId: 'K2VljzCC16g', videoSub: 'Codo bajo el hombro, cadera arriba, cuerpo recto lateral.', tip: 'Codo directamente bajo el hombro. Cadera arriba: el error más común es dejarla caer. Mira hacia adelante. Contrae el oblicuo superior.', errors: [{ label: '❌ Error', text: 'Cadera cayendo hacia abajo. El oblicuo trabaja para mantenerla arriba.' }] },
+          { name: 'Dead Bug (Insecto Muerto)', sets: 3, reps: '10 reps x lado', restSec: 0, videoId: 'g_BYB0R-4Ws', videoSub: 'Espalda baja pegada al suelo, movimiento lento y controlado.', tip: 'Boca arriba, brazos al cielo, rodillas a 90°. Extiende brazo derecho + pierna izquierda juntos sin que la espalda baja se despegue. Alternando.', errors: [{ label: '❌ Error', text: 'Espalda baja se arquea → el ejercicio pierde su función.' }] },
+          { name: 'Russian Twists', sets: 3, reps: '30 reps', restSec: 45, videoId: 'wkD8rjkodUI', videoSub: 'Pies levantados, torso inclinado 45°, rota de lado a lado.', tip: 'Siéntate con pies levantados del suelo. Inclina el torso 45°. Toca el suelo con ambas manos alternando lados. Con peso si puedes.', errors: [] }
+        ]
+      },
+      {
+        title: 'CARDIO FINAL — LISS',
+        exercises: [
+          { name: 'Caminata Rápida / Trote Exterior', sets: 1, reps: '20 min', restSec: 0, videoId: '', videoSub: '', tip: 'Sal a caminar rápido por el barrio o trota suave. Ritmo donde puedas hablar pero con ligero esfuerzo. Zona de quema de grasa óptima.', errors: [] }
+        ]
+      }
+    ]
+  },
+
+  // ── VIERNES: GYM — Tren Superior (Hombros + Core + Cardio)
+  {
+    day: 'VIE', label: 'HOMBROS + CARDIO', type: 'gym', duration: '90 min',
+    focus: 'Hombros · Abdomen · Cardio HIIT',
+    blocks: [
+      {
+        title: 'CALENTAMIENTO',
+        exercises: [
+          { name: 'Caminadora / Elíptica suave', sets: 1, reps: '8 min', restSec: 0, videoId: '', videoSub: '', tip: 'Ritmo conversacional. Activa el cuerpo. Rotaciones de hombro en los últimos 2 min para lubricar la articulación.', errors: [] }
+        ]
+      },
+      {
+        title: 'HOMBROS — Desarrollo completo',
+        exercises: [
+          { name: 'Press Militar con Barra (de pie)', sets: 4, reps: '8', restSec: 75, videoId: 'qEwKCR5JCog', videoSub: 'Core apretado, barra frente a la cara al bajar, empuje vertical.', tip: 'El más efectivo para masa de hombro. Agarre al ancho de hombros. Barra baja hasta la barbilla. Core apretado. No arquees la espalda.', errors: [{ label: '❌ Error', text: 'Arquearse hacia atrás → convierte en press inclinado.' }, { label: '❌ Error', text: 'Bajar la barra detrás de la nuca → lesión de manguito.' }] },
+          { name: 'Elevaciones Laterales (Mancuernas)', sets: 4, reps: '15', restSec: 45, videoId: 'FeJbvGm_09k', videoSub: 'Codo ligeramente doblado, sube hasta paralelo, baja lento.', tip: 'Usa poco peso. El codo ligeramente doblado. Sube hasta que los brazos queden paralelos al suelo. Baja en 3 segundos. No hagas palanca.', errors: [{ label: '❌ Error', text: 'Subir los brazos por encima del paralelo → impingement.' }, { label: '❌ Error', text: 'Balancear el cuerpo. Peso más ligero y forma perfecta.' }] },
+          { name: 'Face Pulls (Polea alta)', sets: 3, reps: '20', restSec: 45, videoId: 'HSoHeSjvIdY', videoSub: 'Hala hacia la cara, codos arriba, rotación externa del hombro.', tip: 'Esencial para salud del manguito rotador. Polea a altura de cara. Hala hacia tu nariz separando las manos. Codos a la altura de los hombros.', errors: [] },
+          { name: 'Remo al Mentón (Barra)', sets: 3, reps: '12', restSec: 45, videoId: 'JhOhFKKcBaQ', videoSub: 'Codos guían el movimiento, sube hasta el mentón, baja lento.', tip: 'Agarre estrecho. Los CODOS guían el movimiento hacia arriba. Sube hasta que la barra llegue al mentón. Trabaja deltoides medio y trapecio.', errors: [{ label: '❌ Error', text: 'Agarre muy estrecho → tensión en muñecas.' }] }
+        ]
+      },
+      {
+        title: 'CORE PESADO',
+        exercises: [
+          { name: 'Rueda Abdominal (Ab Wheel)', sets: 4, reps: '10', restSec: 45, videoId: 'AhGCpbPf77U', videoSub: 'Extiende hasta donde puedas sin arquear, vuelve con el core.', tip: 'De rodillas inicialmente. Extiende la rueda hasta donde puedas sin que la espalda baja se arquee. Vuelve contrayendo el abdomen, no jalando con los hombros.', errors: [] },
+          { name: 'Colgado en Barra — Knee Raises', sets: 3, reps: '15', restSec: 45, videoId: 'hdng3gmd4e0', videoSub: 'Pelvis rota al subir las rodillas, no solo sube las piernas.', tip: 'Cuélgate de la barra. Sube las rodillas hacia el pecho ROTANDO la pelvis al final. Si no rotas, solo trabajas flexores de cadera, no abdomen.', errors: [{ label: '❌ Error', text: 'Balancearse. Sube y baja controlado, sin inercia.' }] }
+        ]
+      },
+      {
+        title: 'FINISHER CARDIO HIIT',
+        exercises: [
+          { name: 'Sprints en Caminadora (Intervalos)', sets: 1, reps: '20 min', restSec: 0, videoId: '', videoSub: '', tip: 'Protocolo: 30 seg sprint (nivel 8-9) + 90 seg caminata (nivel 4). Repite 10 veces. Esto genera el mayor gasto calórico post-ejercicio (EPOC).', errors: [] }
+        ]
+      }
+    ]
+  },
+
+  // ── SÁBADO: GYM — Full Body Metabólico
+  {
+    day: 'SÁB', label: 'FULL BODY METABÓLICO', type: 'gym', duration: '90 min',
+    focus: 'Todo el cuerpo · Circuito de alta densidad',
+    blocks: [
+      {
+        title: 'CALENTAMIENTO',
+        exercises: [
+          { name: 'Jump Rope / Saltar lazo (o simulado)', sets: 1, reps: '5 min', restSec: 0, videoId: 'FJmRQ5iTXKE', videoSub: 'Si no tienes lazo, simula el movimiento. Activa todo el cuerpo.', tip: '5 minutos continuos. Si tienes lazo, perfecto. Si no, simula el movimiento saltando ligeramente con el mismo ritmo. Excelente calentamiento.', errors: [] }
+        ]
+      },
+      {
+        title: 'CIRCUITO METABÓLICO — 4 vueltas (60 seg descanso entre vueltas)',
+        exercises: [
+          { name: 'Peso Muerto (Barra o Mancuernas)', sets: 4, reps: '10', restSec: 0, videoId: 'op9kVnSso6Q', videoSub: 'Espalda neutra, empuja el suelo, barra cerca del cuerpo siempre.', tip: 'El ejercicio más completo que existe. Espalda NEUTRA (no redondeada). Barra pegada al cuerpo. Empuja el suelo con los pies al subir. Activa casi todos los músculos.', errors: [{ label: '❌ Error', text: 'Redondear la espalda baja → lesión de disco.' }, { label: '❌ Error', text: 'Barra lejos del cuerpo → estrés lumbar excesivo.' }] },
+          { name: 'Dominadas (o Jalón al Pecho)', sets: 4, reps: 'máx (o 12)', restSec: 0, videoId: 'eGo4IYlbE5g', videoSub: 'Pecho al bar, rango completo, baja controlado en 3 segundos.', tip: 'Si puedes hacer dominadas: pecho toca la barra arriba, baja hasta extensión completa. Si no: jalón al pecho con peso moderado, 12 reps.', errors: [{ label: '❌ Error', text: 'Balancearse para subir. Movimiento estricto.' }] },
+          { name: 'Dips de Tríceps (Paralelas o silla)', sets: 4, reps: '12', restSec: 0, videoId: 'l4kQd9eWclE', videoSub: 'Cuerpo vertical, codos hacia atrás, baja hasta 90°.', tip: 'Si te inclinás hacia adelante, trabajas más pecho. Para tríceps: cuerpo vertical. Baja hasta que codos lleguen a 90°. No más.', errors: [{ label: '❌ Error', text: 'Bajar demasiado → tensión en el hombro anterior.' }] },
+          { name: 'Kettlebell Swing (o Mancuerna)', sets: 4, reps: '20', restSec: 60, videoId: 'YSxHifyI6s8', videoSub: 'Cadera hacia atrás, no sentadilla. Explosión de cadera al frente.', tip: 'No es una sentadilla. Es un movimiento de bisagra de cadera. La potencia viene de empujar la cadera hacia adelante, no de los brazos.', errors: [{ label: '❌ Error', text: 'Sentadilla en vez de bisagra → mal patrón y menos efectivo.' }] }
+        ]
+      },
+      {
+        title: 'CARDIO FINAL',
+        exercises: [
+          { name: 'Remo en Máquina (Ergómetro)', sets: 1, reps: '15 min', restSec: 0, videoId: 'H0r_ZdAcOKE', videoSub: 'Empuja con las piernas primero, luego jala con los brazos. Mantén ritmo.', tip: 'Técnica: piernas empujan → cadera se inclina → brazos jalan. No al revés. Ritmo constante. Excelente cardio de bajo impacto articular.', errors: [] }
+        ]
+      }
+    ]
+  },
+
+  // ── DOMINGO: MOVILIDAD ACTIVA
+  {
+    day: 'DOM', label: 'MOVILIDAD ACTIVA', type: 'rest', duration: '30–40 min',
+    focus: 'Recuperación · Flexibilidad · Prevención de lesiones',
+    blocks: []
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let selectedDay = (new Date().getDay() + 6) % 7;
+let completed = {};
+let timerSecs = 60, timerMax = 60, timerInterval = null, timerRunning = false;
+let restSecs = 0, restInterval = null;
+
+function storageKey() {
+  const d = new Date();
+  const w = Math.ceil((((d - new Date(d.getFullYear(),0,1))/86400000) + new Date(d.getFullYear(),0,1).getDay()+1)/7);
+  return `burngt_${d.getFullYear()}_w${w}_d${selectedDay}`;
+}
+
+function loadCompleted() {
+  const raw = localStorage.getItem(storageKey());
+  completed = raw ? JSON.parse(raw) : {};
+}
+
+function saveCompleted() {
+  localStorage.setItem(storageKey(), JSON.stringify(completed));
+}
+
+function isDayDone(d) {
+  const day = PLAN[d];
+  if (day.type === 'rest') return false;
+  const key = storageKey.call({selectedDay: d});
+  // simplified check
+  return false; // would need refactor for multi-day
+}
+
+function getWeekDone() {
+  let done = 0;
+  for(let i=0;i<7;i++) {
+    const k = `burngt_${new Date().getFullYear()}_w${Math.ceil((((new Date()-new Date(new Date().getFullYear(),0,1))/86400000)+new Date(new Date().getFullYear(),0,1).getDay()+1)/7)}_d${i}`;
+    const raw = localStorage.getItem(k);
+    if(!raw) continue;
+    const data = JSON.parse(raw);
+    if(Object.values(data).some(Boolean)) done++;
+  }
+  return done;
+}
+
+// ============================================================
+// BUILD UI
+// ============================================================
+function buildTabs() {
+  const wrap = document.getElementById('dayTabs');
+  wrap.innerHTML = '';
+  PLAN.forEach((d, i) => {
+    const tab = document.createElement('div');
+    tab.className = `day-tab tab-${d.type} ${i === selectedDay ? 'active-tab' : ''}`;
+    tab.innerHTML = `<div class="tab-day">${d.day}</div><div class="tab-type">${d.type.toUpperCase()}</div>`;
+    tab.onclick = () => selectDay(i);
+    wrap.appendChild(tab);
+  });
+  document.getElementById('weekPill').textContent = `${getWeekDone()}/7 días`;
+}
+
+function selectDay(i) {
+  selectedDay = i;
+  loadCompleted();
+  buildTabs();
+  renderSession();
+  resetTimer();
+}
+
+function renderSession() {
+  const panel = document.getElementById('sessionPanel');
+  const day = PLAN[selectedDay];
+
+  if (day.type === 'rest') {
+    panel.innerHTML = `
+      <div class="session-header">
+        <div class="session-left">
+          <div class="session-type-badge badge-rest">😴 DESCANSO ACTIVO</div>
+          <div class="session-name">${day.label}</div>
+          <div class="session-duration">⏱ ${day.duration}</div>
+        </div>
+      </div>
+      <div class="rest-day-panel">
+        <span class="rest-day-icon">🧘</span>
+        <div class="rest-day-title">MOVILIDAD ACTIVA</div>
+        <div class="rest-day-desc">El músculo crece y la grasa se quema mientras descansas. Este día es tan importante como los de entrenamiento.</div>
+        <div class="mobility-list">
+          <div class="mob-item"><span class="mob-icon">🔄</span><div><div>Rotaciones de cadera y hombros</div><div class="mob-detail">2 min × 3 series · Círculos lentos</div></div></div>
+          <div class="mob-item"><span class="mob-icon">🦵</span><div><div>Estiramiento de cuádriceps e isquios</div><div class="mob-detail">45 seg × lado · 2 series</div></div></div>
+          <div class="mob-item"><span class="mob-icon">🌊</span><div><div>Cobra + Child's Pose (Yoga)</div><div class="mob-detail">60 seg × postura · Libera la espalda</div></div></div>
+          <div class="mob-item"><span class="mob-icon">🚶</span><div><div>Caminata al aire libre</div><div class="mob-detail">20–30 min a ritmo suave</div></div></div>
+          <div class="mob-item"><span class="mob-icon">🧊</span><div><div>Ducha fría (opcional)</div><div class="mob-detail">2 min agua fría → reduce inflamación</div></div></div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const badgeClass = day.type === 'gym' ? 'badge-gym' : 'badge-home';
+  const badgeIcon = day.type === 'gym' ? '🏛️' : '🔥';
+  const indClass = day.type === 'gym' ? 'ind-gym' : 'ind-home';
+  const chipClass = day.type === 'gym' ? 'chip-reps' : 'chip-home';
+
+  // count total exercises
+  const allExes = day.blocks.flatMap(b => b.exercises);
+  const totalEx = allExes.length;
+  const doneEx = allExes.filter((_, fi) => {
+    const key = `${selectedDay}_${fi}`;
+    return completed[key];
+  }).length;
+  const pct = totalEx > 0 ? Math.round((doneEx / totalEx) * 100) : 0;
+
+  let exerciseGlobalIdx = 0;
+
+  let blocksHtml = '';
+  day.blocks.forEach((block) => {
+    let exHtml = '';
+    const isSuperset = block.superset;
+
+    block.exercises.forEach((ex) => {
+      const idx = exerciseGlobalIdx++;
+      const key = `${selectedDay}_${idx}`;
+      const isDone = !!completed[key];
+      const hasErrors = ex.errors && ex.errors.length > 0;
+
+      const errorsHtml = hasErrors ? `
+        <div class="errors-grid">
+          ${ex.errors.map(e => `<div class="error-item"><div class="error-label">${e.label}</div><div class="error-text">${e.text}</div></div>`).join('')}
+        </div>` : '';
+
+      const ytBtn = ex.videoId ? `
+        <button class="btn-yt" onclick="openVid('${ex.videoId}','${ex.name.replace(/'/g,"\\'")}','${ex.videoSub.replace(/'/g,"\\'")}'); event.stopPropagation();">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="#cc0000"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+          Ver técnica
+        </button>` : '';
+
+      exHtml += `
+        <div class="ex-card ${isDone ? 'done-card' : ''}" id="card_${idx}" data-idx="${idx}">
+          <div class="ex-main" onclick="toggleExpand(${idx})">
+            <div class="ex-indicator ${indClass}"></div>
+            <div class="ex-body">
+              <div class="ex-name">${ex.name}</div>
+              <div class="ex-chips">
+                <span class="chip chip-sets">${ex.sets} ${ex.sets === 1 ? 'serie' : 'series'}</span>
+                <span class="chip ${chipClass}">${ex.reps}</span>
+                ${ex.restSec > 0 ? `<span class="chip chip-rest">⏱ ${ex.restSec}s descanso</span>` : ''}
+              </div>
+            </div>
+            <div class="ex-check" id="chk_${idx}" onclick="toggleDone(event, ${idx}, ${ex.restSec})">${isDone ? '✓' : ''}</div>
+          </div>
+          <div class="ex-detail">
+            <div class="tip-text">${ex.tip}</div>
+            ${errorsHtml}
+            ${ytBtn}
+          </div>
+        </div>`;
+    });
+
+    if (isSuperset) {
+      blocksHtml += `
+        <div class="block-title">${block.title}</div>
+        <div class="superset-wrap">
+          <div class="superset-line"></div>
+          <div class="superset-label">▲ SUPERSET — Realiza A luego B sin descanso, descansa al final</div>
+          ${exHtml}
+        </div>`;
+    } else {
+      blocksHtml += `<div class="block-title">${block.title}</div>${exHtml}`;
+    }
+  });
+
+  panel.innerHTML = `
+    <div class="session-header">
+      <div class="session-left">
+        <div class="session-type-badge ${badgeClass}">${badgeIcon} ${day.type.toUpperCase()}</div>
+        <div class="session-name">${day.label}</div>
+        <div class="session-duration">⏱ ${day.duration} · ${day.focus}</div>
+      </div>
+      <div class="session-progress-wrap">
+        <div class="session-pct">${pct}%</div>
+        <div class="session-pct-label">Completado</div>
+      </div>
+    </div>
+
+    <!-- TIMER -->
+    <div class="timer-card">
+      <div>
+        <div class="timer-label-txt">DESCANSO ENTRE SERIES</div>
+        <div class="timer-num" id="timerNum">01:00</div>
+        <div class="timer-hint" id="timerHint">Presiona START</div>
+      </div>
+      <div class="timer-right">
+        <svg width="60" height="60" viewBox="0 0 60 60" class="timer-svg">
+          <circle cx="30" cy="30" r="26" fill="none" stroke="#2a2a2a" stroke-width="5"/>
+          <circle cx="30" cy="30" r="26" fill="none" stroke="#e8ff47" stroke-width="5"
+            stroke-dasharray="163.4" stroke-dashoffset="0" stroke-linecap="round"
+            id="timerArc" transform="rotate(-90 30 30)" style="transition:stroke-dashoffset 0.1s linear, stroke 0.3s"/>
+        </svg>
+        <button class="t-btn" id="tBtn" onclick="toggleTimer()">START</button>
+      </div>
+    </div>
+
+    <div class="presets">
+      <button class="preset ${timerSecs===45?'on':''}" onclick="setPreset(45,this)">45 seg</button>
+      <button class="preset ${timerSecs===60?'on':''}" onclick="setPreset(60,this)">60 seg</button>
+      <button class="preset ${timerSecs===90?'on':''}" onclick="setPreset(90,this)">90 seg</button>
+      <button class="preset ${timerSecs===120?'on':''}" onclick="setPreset(120,this)">2 min</button>
+    </div>
+
+    ${blocksHtml}
+
+    <div class="complete-wrap">
+      <button class="complete-btn" id="completeBtn" onclick="completeSession()" ${pct < 100 ? 'disabled' : ''}>
+        ${pct >= 100 ? '✓ SESIÓN COMPLETADA' : 'COMPLETA TODOS LOS EJERCICIOS'}
+      </button>
+    </div>`;
+}
+
+// ============================================================
+// INTERACTIONS
+// ============================================================
+function toggleExpand(idx) {
+  const card = document.getElementById(`card_${idx}`);
+  card.classList.toggle('expanded');
+}
+
+function toggleDone(e, idx, restSec) {
+  e.stopPropagation();
+  const key = `${selectedDay}_${idx}`;
+  completed[key] = !completed[key];
+  saveCompleted();
+
+  const card = document.getElementById(`card_${idx}`);
+  const chk = document.getElementById(`chk_${idx}`);
+
+  if (completed[key]) {
+    card.classList.add('done-card');
+    chk.textContent = '✓';
+    toast('¡Ejercicio completado! 💪');
+    if (restSec > 0) triggerRest(restSec, idx);
+  } else {
+    card.classList.remove('done-card');
+    chk.textContent = '';
+  }
+
+  // update progress %
+  const day = PLAN[selectedDay];
+  const allExes = day.blocks.flatMap(b => b.exercises);
+  const total = allExes.length;
+  const done = allExes.filter((_, fi) => completed[`${selectedDay}_${fi}`]).length;
+  const pct = Math.round((done/total)*100);
+  const pctEl = document.querySelector('.session-pct');
+  if (pctEl) pctEl.textContent = pct + '%';
+  const btn = document.getElementById('completeBtn');
+  if (btn) {
+    btn.disabled = pct < 100;
+    btn.textContent = pct >= 100 ? '✓ SESIÓN COMPLETADA' : 'COMPLETA TODOS LOS EJERCICIOS';
+  }
+  buildTabs();
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    const btn = document.getElementById('tBtn');
+    if(btn){ btn.textContent='START'; btn.classList.remove('stop'); }
+    const hint = document.getElementById('timerHint');
+    if(hint) hint.textContent = 'Presiona START';
+  } else {
+    timerSecs = timerMax;
+    timerRunning = true;
+    const btn = document.getElementById('tBtn');
+    if(btn){ btn.textContent='STOP'; btn.classList.add('stop'); }
+    const hint = document.getElementById('timerHint');
+    if(hint) hint.textContent = 'Descansando...';
+    timerInterval = setInterval(tickTimer, 1000);
+  }
+}
+
+function tickTimer() {
+  timerSecs--;
+  updateTimerDisplay();
+  if (timerSecs <= 0) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    const btn = document.getElementById('tBtn');
+    if(btn){ btn.textContent='START'; btn.classList.remove('stop'); }
+    const hint = document.getElementById('timerHint');
+    if(hint) hint.textContent = '¡A por la siguiente serie!';
+    const num = document.getElementById('timerNum');
+    if(num) num.classList.remove('warn');
+    if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  }
+}
+
+function updateTimerDisplay() {
+  const m = String(Math.floor(timerSecs/60)).padStart(2,'0');
+  const s = String(timerSecs%60).padStart(2,'0');
+  const num = document.getElementById('timerNum');
+  const arc = document.getElementById('timerArc');
+  if(num) { num.textContent=`${m}:${s}`; num.classList.toggle('warn', timerSecs<=10); }
+  if(arc) {
+    const offset = 163.4 * (1 - timerSecs/timerMax);
+    arc.style.strokeDashoffset = offset;
+    arc.style.stroke = timerSecs<=10 ? '#ff6b35' : '#e8ff47';
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSecs = timerMax;
+}
+
+function setPreset(secs, btn) {
+  document.querySelectorAll('.preset').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  timerMax = secs;
+  timerSecs = secs;
+  resetTimer();
+  const num = document.getElementById('timerNum');
+  if(num) num.textContent = `${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`;
+  const arc = document.getElementById('timerArc');
+  if(arc) { arc.style.strokeDashoffset = 0; arc.style.stroke = '#e8ff47'; }
+  const btn2 = document.getElementById('tBtn');
+  if(btn2){ btn2.textContent='START'; btn2.classList.remove('stop'); }
+}
+
+// ============================================================
+// REST OVERLAY
+// ============================================================
+function triggerRest(secs, idx) {
+  restSecs = secs;
+  const ov = document.getElementById('restOv');
+  const num = document.getElementById('restOvNum');
+  const next = document.getElementById('restOvNext');
+  num.textContent = restSecs;
+  num.classList.remove('warn');
+  next.innerHTML = `<strong>¡Bien hecho!</strong> Recuperando ${restSecs} segundos...`;
+  ov.classList.add('on');
+  clearInterval(restInterval);
+  restInterval = setInterval(() => {
+    restSecs--;
+    num.textContent = restSecs;
+    if(restSecs<=10) num.classList.add('warn');
+    if(restSecs<=0){
+      clearInterval(restInterval);
+      ov.classList.remove('on');
+      if(navigator.vibrate) navigator.vibrate([300,100,300]);
+    }
+  }, 1000);
+}
+
+function skipRest() {
+  clearInterval(restInterval);
+  document.getElementById('restOv').classList.remove('on');
+}
+
+// ============================================================
+// VIDEO
+// ============================================================
+function openVid(id, name, sub) {
+  document.getElementById('vidTitle').textContent = name.toUpperCase();
+  document.getElementById('vidSub').textContent = sub;
+  document.getElementById('vidIframe').src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`;
+  document.getElementById('vidModal').classList.add('on');
+}
+
+function closeVid() {
+  document.getElementById('vidModal').classList.remove('on');
+  document.getElementById('vidIframe').src = '';
+}
+
+// ============================================================
+// COMPLETE + TOAST
+// ============================================================
+function completeSession() {
+  toast('🏆 ¡SESIÓN COMPLETADA! Eres un beast 🔥');
+  buildTabs();
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 2800);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadCompleted();
+buildTabs();
+renderSession();
+</script>
+</body>
+</html>

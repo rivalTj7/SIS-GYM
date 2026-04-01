@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BURN GT — Tu Coach Personal</title>
+<meta name="description" content="Rutina de quema de grasa para Guatemala. 7 días de entrenamiento estructurado, gym y casa.">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;800;900&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0d;
+  --surface: #161616;
+  --border: #242424;
+  --accent: #e63946;
+  --yellow: #e8ff47;
+  --orange: #f4a261;
+  --text: #f0ede6;
+  --muted: #666;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* GRID BG */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(13,13,13,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--accent);
+}
+
+.nav-logo span { color: var(--text); }
+
+.nav-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 120px 24px 60px;
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-eyebrow::before {
+  content:'';
+  width: 28px;
+  height: 2px;
+  background: var(--accent);
+  display: inline-block;
+}
+
+.hero-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(72px, 20vw, 130px);
+  line-height: 0.86;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+}
+
+.hero-title .hl { color: var(--yellow); }
+.hero-title .hl2 { color: var(--accent); }
+
+.hero-sub {
+  margin-top: 24px;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 360px;
+}
+
+.hero-sub strong { color: var(--text); }
+
+.hero-cta {
+  margin-top: 36px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 16px 28px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover { background: #c1121f; transform: translateY(-2px); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--text);
+  text-decoration: none;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 28px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover { border-color: var(--yellow); color: var(--yellow); transform: translateY(-2px); }
+
+/* stats bar */
+.stats-bar {
+  margin-top: 56px;
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  max-width: 500px;
+}
+
+.stat-block {
+  flex: 1;
+  padding: 18px 16px;
+  border-right: 1px solid var(--border);
+  text-align: center;
+}
+
+.stat-block:last-child { border-right: none; }
+
+.stat-n {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--yellow);
+  line-height: 1;
+}
+
+.stat-l {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* scroll indicator */
+.scroll-hint {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%,100%{ transform: translateX(-50%) translateY(0); }
+  50%{ transform: translateX(-50%) translateY(6px); }
+}
+
+/* ── APPS SECTION ── */
+.apps-section {
+  position: relative;
+  z-index: 1;
+  padding: 80px 24px;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(36px, 8vw, 56px);
+  font-weight: 900;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.section-desc {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 380px;
+  margin-bottom: 40px;
+}
+
+.apps-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  max-width: 700px;
+}
+
+.app-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s;
+  text-decoration: none;
+  display: block;
+}
+
+.app-card:hover {
+  border-color: #333;
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+.app-card-top {
+  padding: 28px 28px 20px;
+  position: relative;
+}
+
+.app-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin-bottom: 14px;
+}
+
+.tag-red { background: rgba(230,57,70,0.15); color: var(--accent); }
+.tag-yellow { background: rgba(232,255,71,0.1); color: var(--yellow); }
+
+.app-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.app-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.app-features {
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feat {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+
+.app-card-footer {
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.open-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.card-red .open-label { color: var(--accent); }
+.card-yellow .open-label { color: var(--yellow); }
+
+.open-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: transform 0.2s;
+}
+
+.card-red .open-arrow { background: rgba(230,57,70,0.15); color: var(--accent); }
+.card-yellow .open-arrow { background: rgba(232,255,71,0.1); color: var(--yellow); }
+
+.app-card:hover .open-arrow { transform: translateX(4px); }
+
+/* accent band */
+.app-band {
+  height: 4px;
+}
+
+.band-red { background: var(--accent); }
+.band-yellow { background: var(--yellow); }
+
+/* ── HOW IT WORKS ── */
+.how-section {
+  position: relative;
+  z-index: 1;
+  padding: 60px 24px 80px;
+  border-top: 1px solid var(--border);
+}
+
+.steps {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 500px;
+}
+
+.step {
+  display: flex;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+.step:last-child { border-bottom: none; }
+
+.step-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--border);
+  line-height: 1;
+  flex-shrink: 0;
+  width: 42px;
+}
+
+.step-body { }
+
+.step-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.step-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ── SCHEDULE ── */
+.schedule-section {
+  position: relative;
+  z-index: 1;
+  padding: 60px 24px 80px;
+  border-top: 1px solid var(--border);
+}
+
+.week-grid {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  max-width: 600px;
+}
+
+.week-cell {
+  border-radius: 10px;
+  padding: 12px 6px;
+  text-align: center;
+  border: 1.5px solid var(--border);
+}
+
+.wc-gym { border-color: rgba(230,57,70,0.4); background: rgba(230,57,70,0.06); }
+.wc-home { border-color: rgba(244,162,97,0.4); background: rgba(244,162,97,0.06); }
+.wc-rest { border-color: rgba(76,175,138,0.4); background: rgba(76,175,138,0.06); }
+
+.wc-day {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.wc-gym .wc-day { color: var(--accent); }
+.wc-home .wc-day { color: var(--orange); }
+.wc-rest .wc-day { color: #4caf8a; }
+
+.wc-icon { font-size: 18px; display: block; margin: 4px 0; }
+.wc-type { font-size: 9px; color: var(--muted); font-weight: 700; letter-spacing: 0.5px; }
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 32px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: gap;
+  gap: 12px;
+}
+
+.footer-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--accent);
+}
+
+.footer-logo span { color: var(--muted); }
+
+.footer-note {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* fade-in animation */
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(20px); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+.fadein { animation: fadeUp 0.5s ease forwards; }
+.delay1 { animation-delay: 0.1s; opacity:0; }
+.delay2 { animation-delay: 0.2s; opacity:0; }
+.delay3 { animation-delay: 0.3s; opacity:0; }
+.delay4 { animation-delay: 0.4s; opacity:0; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">BURN<span> GT</span></div>
+  <div class="nav-tag">🇬🇹 Guatemala</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow fadein">Tu coach personal · Sin excusas</div>
+  <div class="hero-title fadein delay1">
+    QUEMA<br><span class="hl">GRASA</span><br><span class="hl2">DIARIO</span>
+  </div>
+  <div class="hero-sub fadein delay2">
+    <strong>7 días activos.</strong> Gym y casa alternando. 90 minutos de entrenamiento estructurado para perder grasa sin perder músculo.
+  </div>
+  <div class="hero-cta fadein delay3">
+    <a href="apps/rutina.html" class="btn-primary">🔥 Abrir Rutina</a>
+    <a href="apps/coach.html" class="btn-secondary">🏛️ Plan Semanal</a>
+  </div>
+  <div class="stats-bar fadein delay4">
+    <div class="stat-block">
+      <div class="stat-n">7</div>
+      <div class="stat-l">Días activos</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-n">~600</div>
+      <div class="stat-l">Kcal/sesión</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-n">90</div>
+      <div class="stat-l">Min/día</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-n">0</div>
+      <div class="stat-l">Excusas</div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>↓</span>
+    <span>Ver apps</span>
+  </div>
+</section>
+
+<!-- APPS -->
+<section class="apps-section">
+  <div class="section-label">Las herramientas</div>
+  <div class="section-title">DOS APPS,<br>UN OBJETIVO</div>
+  <div class="section-desc">Cada app tiene un propósito. Úsalas juntas para sacar el máximo resultado.</div>
+
+  <div class="apps-grid">
+
+    <!-- APP 1 -->
+    <a href="apps/rutina.html" class="app-card card-red">
+      <div class="app-band band-red"></div>
+      <div class="app-card-top">
+        <div class="app-tag tag-red">🏛️ Gym + 🔥 Casa</div>
+        <div class="app-name">RUTINA<br>7 DÍAS</div>
+        <div class="app-desc">Plan completo de quema de grasa. Cada día tiene su bloque de ejercicios con técnica, errores comunes y video de YouTube integrado.</div>
+      </div>
+      <div class="app-features">
+        <span class="feat">📅 7 días estructurados</span>
+        <span class="feat">⚡ Supersets y HIIT</span>
+        <span class="feat">▶️ Videos de técnica</span>
+        <span class="feat">⏱ Timer automático</span>
+        <span class="feat">❌ Errores comunes</span>
+        <span class="feat">✅ Progreso guardado</span>
+      </div>
+      <div class="app-card-footer">
+        <span class="open-label">Abrir rutina →</span>
+        <div class="open-arrow">→</div>
+      </div>
+    </a>
+
+    <!-- APP 2 -->
+    <a href="apps/coach.html" class="app-card card-yellow">
+      <div class="app-band band-yellow"></div>
+      <div class="app-card-top">
+        <div class="app-tag tag-yellow">📋 Plan Original</div>
+        <div class="app-name">COACH<br>SEMANAL</div>
+        <div class="app-desc">El plan de batalla original: gym lunes/miércoles/viernes, casa martes/jueves/sábado. Con las 3 reglas de oro y timer de descanso.</div>
+      </div>
+      <div class="app-features">
+        <span class="feat">🏛️ Gym 3x semana</span>
+        <span class="feat">🔥 Casa 3x semana</span>
+        <span class="feat">⏱ Timer con presets</span>
+        <span class="feat">📊 Progreso semanal</span>
+        <span class="feat">💡 Tips de técnica</span>
+        <span class="feat">3 Reglas de oro</span>
+      </div>
+      <div class="app-card-footer">
+        <span class="open-label">Abrir coach →</span>
+        <div class="open-arrow">→</div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="section-label">¿Cómo funciona?</div>
+  <div class="section-title">SIMPLE<br>Y DIRECTO</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <div class="step-title">Abrí la app del día</div>
+        <div class="step-desc">Gym o casa según el día. El plan está diseñado para alternar y maximizar la recuperación mientras seguís quemando grasa.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <div class="step-title">Tocá el ejercicio para ver la técnica</div>
+        <div class="step-desc">Expandí cada tarjeta para ver tips, errores comunes y el video de YouTube con la demostración correcta.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <div class="step-title">Marcá como completado</div>
+        <div class="step-desc">Al marcar un ejercicio, el timer de descanso se activa automáticamente. Sin pensar, solo ejecutar.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <div class="step-title">Proteína y agua al terminar</div>
+        <div class="step-desc">10:30 PM: huevo, pollo o atún. Hidratate antes, durante y después. En Guatemala el calor es real.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCHEDULE -->
+<section class="schedule-section">
+  <div class="section-label">La semana</div>
+  <div class="section-title">CADA DÍA<br>TIENE UN PLAN</div>
+  <div class="week-grid">
+    <div class="week-cell wc-gym">
+      <div class="wc-day">LUN</div>
+      <span class="wc-icon">🏛️</span>
+      <div class="wc-type">TREN SUP</div>
+    </div>
+    <div class="week-cell wc-home">
+      <div class="wc-day">MAR</div>
+      <span class="wc-icon">🔥</span>
+      <div class="wc-type">HIIT</div>
+    </div>
+    <div class="week-cell wc-gym">
+      <div class="wc-day">MIÉ</div>
+      <span class="wc-icon">🏛️</span>
+      <div class="wc-type">TREN INF</div>
+    </div>
+    <div class="week-cell wc-home">
+      <div class="wc-day">JUE</div>
+      <span class="wc-icon">🔥</span>
+      <div class="wc-type">CARDIO</div>
+    </div>
+    <div class="week-cell wc-gym">
+      <div class="wc-day">VIE</div>
+      <span class="wc-icon">🏛️</span>
+      <div class="wc-type">HOMBROS</div>
+    </div>
+    <div class="week-cell wc-gym">
+      <div class="wc-day">SÁB</div>
+      <span class="wc-icon">🏛️</span>
+      <div class="wc-type">FULL BODY</div>
+    </div>
+    <div class="week-cell wc-rest">
+      <div class="wc-day">DOM</div>
+      <span class="wc-icon">🧘</span>
+      <div class="wc-type">MOVILIDAD</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">BURN<span> GT · 2025</span></div>
+  <div class="footer-note">Hecho para Guatemala 🇬🇹 · Sin excusas</div>
+</footer>
+
+</body>
+</html>
