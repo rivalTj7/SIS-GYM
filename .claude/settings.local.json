@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "WebFetch(domain:www.youtube.com)",
-      "WebSearch",
-      "WebFetch(domain:www.muscleandstrength.com)"
-    ]
-  }
-}
