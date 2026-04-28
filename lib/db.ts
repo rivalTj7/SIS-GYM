@@ -1,10 +1,18 @@
-import { neon } from '@neondatabase/serverless';
+import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not set');
+let _sql: ReturnType<typeof neon> | undefined;
+
+function connect() {
+  if (!_sql) {
+    const url = process.env.DATABASE_URL;
+    if (!url) throw new Error('DATABASE_URL is not set');
+    _sql = neon(url);
+  }
+  return _sql;
 }
 
-export const sql = neon(process.env.DATABASE_URL);
+export const sql = ((strings: TemplateStringsArray, ...values: unknown[]) =>
+  connect()(strings, ...values)) as unknown as NeonQueryFunction<false, false>;
 
 // ── Typed query helpers ────────────────────────────────────
 export type User = {
