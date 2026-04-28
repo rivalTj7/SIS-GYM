@@ -88,7 +88,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ profile: rows[0] });
     } catch (err) {
       if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
-      throw err;
+      console.error('Profile save error:', err);
+      return NextResponse.json({ error: 'Error al guardar perfil' }, { status: 500 });
     }
   }
 
@@ -108,7 +109,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ food: rows[0] }, { status: 201 });
   } catch (err) {
     if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
-    throw err;
+    console.error('Food log error:', err);
+    return NextResponse.json({ error: 'Error al guardar alimento' }, { status: 500 });
   }
 }
 
