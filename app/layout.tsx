@@ -1,0 +1,21 @@
+import type { Metadata } from 'next';
+import { Bebas_Neue, DM_Sans } from 'next/font/google';
+import './globals.css';
+
+const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], variable: '--font-bebas' });
+const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm' });
+
+export const metadata: Metadata = {
+  title: 'BURN GT PRO',
+  description: 'Tu sistema completo de entrenamiento y nutrición',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="es">
+      <body className={`${bebasNeue.variable} ${dmSans.variable} bg-[#0a0a0a] text-[#f2f0ea] antialiased min-h-screen`}>
+        {children}
+      </body>
+    </html>
+  );
+}
