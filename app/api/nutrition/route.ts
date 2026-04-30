@@ -1,123 +1,119 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { sql, getFoodLogs } from '@/lib/db';
 import { getAuthUserFromRequest } from '@/lib/auth';
-import { calculateTDEE, calculateGoalCalories, calculateMacros } from '@/lib/utils';
 
-const profileSchema = z.object({
-  sex: z.enum(['m', 'f']),
-  age: z.number().int().min(15).max(80),
-  weight_kg: z.number().min(40).max(200),
-  height_cm: z.number().int().min(140).max(220),
-  activity: z.enum(['sed', 'med', 'hi']),
-  goal: z.enum(['def', 'mant', 'vol', 'agr']),
+const schema = z.object({
+  description: z.string().min(2).max(500),
+  servings: z.number().min(0.25).max(10).default(1),
 });
 
-const foodSchema = z.object({
-  food_name: z.string().min(1).max(100),
-  kcal: z.number().int().positive(),
-  protein_g: z.number().min(0).default(0),
-  carbs_g: z.number().min(0).default(0),
-  fat_g: z.number().min(0).default(0),
-  meal_type: z.enum(['desayuno', 'almuerzo', 'cena', 'snack']).default('snack'),
-  logged_at: z.string().optional(),
-});
+type FoodEstimate = {
+  food_name: string;
+  serving_description: string;
+  servings: number;
+  kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  confidence: 'alta' | 'media' | 'baja';
+  notes: string;
+  items: Array<{
+    name: string;
+    kcal: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+  }>;
+};
 
-// GET /api/nutrition?date=2024-01-15
-export async function GET(req: NextRequest) {
-  const auth = getAuthUserFromRequest(req);
-  if (!auth) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+const PROMPT = (description: string, servings: number) => `Eres un nutricionista experto en comida latinoamericana, especialmente guatemalteca.
+El usuario describió su comida como: "${description}"
+Porciones/cantidad: ${servings}
 
-  const { searchParams } = new URL(req.url);
-  const date = searchParams.get('date') || new Date().toISOString().slice(0, 10);
-
-  const [profileRows, foods] = await Promise.all([
-    sql`SELECT * FROM user_profiles WHERE user_id = ${auth.userId} LIMIT 1`,
-    getFoodLogs(auth.userId, date),
-  ]);
-
-  const profile = profileRows[0] || null;
-
-  // Daily totals
-  const totals = foods.reduce(
-    (acc, f) => ({
-      kcal: acc.kcal + Number(f.kcal),
-      protein_g: acc.protein_g + Number(f.protein_g),
-      carbs_g: acc.carbs_g + Number(f.carbs_g),
-      fat_g: acc.fat_g + Number(f.fat_g),
-    }),
-    { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
-  );
-
-  return NextResponse.json({ profile, foods, totals, date });
+Analiza esta comida y devuelve SOLO un objeto JSON válido (sin markdown, sin backticks, sin texto extra) con esta estructura exacta:
+{
+  "food_name": "nombre corto del plato",
+  "serving_description": "descripción de la porción estimada",
+  "servings": ${servings},
+  "kcal": número entero,
+  "protein_g": gramos con 1 decimal,
+  "carbs_g": gramos con 1 decimal,
+  "fat_g": gramos con 1 decimal,
+  "confidence": "alta" o "media" o "baja",
+  "notes": "nota corta sobre la estimación",
+  "items": [
+    { "name": "ingrediente", "kcal": número, "protein_g": número, "carbs_g": número, "fat_g": número }
+  ]
 }
 
-// POST /api/nutrition — profile OR food log
+Reglas:
+- Usa porciones típicas de Guatemala (pan francés ~50g, huevo mediano ~50g, salchicha ~50g, tortilla ~30g)
+- Si es ambiguo usa la porción más común
+- Confidence: "alta" si es específico, "media" si hay variaciones posibles, "baja" si es muy vago
+- Solo JSON puro, nada más`;
+
 export async function POST(req: NextRequest) {
   const auth = getAuthUserFromRequest(req);
   if (!auth) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-  const body = await req.json();
-
-  // If it has sex/age/weight etc → it's a profile update
-  if (body.sex !== undefined) {
-    try {
-      const data = profileSchema.parse(body);
-      const tdee = calculateTDEE(data.sex, data.age, data.weight_kg, data.height_cm, data.activity);
-      const goalKcal = calculateGoalCalories(tdee, data.goal);
-      const { protein, carbs } = calculateMacros(goalKcal, data.weight_kg);
-
-      const rows = await sql`
-        INSERT INTO user_profiles
-          (user_id, sex, age, weight_kg, height_cm, activity, goal, tdee, goal_kcal, goal_prot, goal_carb)
-        VALUES
-          (${auth.userId}, ${data.sex}, ${data.age}, ${data.weight_kg},
-           ${data.height_cm}, ${data.activity}, ${data.goal},
-           ${tdee}, ${goalKcal}, ${protein}, ${carbs})
-        ON CONFLICT (user_id) DO UPDATE SET
-          sex = EXCLUDED.sex, age = EXCLUDED.age,
-          weight_kg = EXCLUDED.weight_kg, height_cm = EXCLUDED.height_cm,
-          activity = EXCLUDED.activity, goal = EXCLUDED.goal,
-          tdee = EXCLUDED.tdee, goal_kcal = EXCLUDED.goal_kcal,
-          goal_prot = EXCLUDED.goal_prot, goal_carb = EXCLUDED.goal_carb,
-          updated_at = NOW()
-        RETURNING *
-      `;
-      return NextResponse.json({ profile: rows[0] });
-    } catch (err) {
-      if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
-      throw err;
-    }
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: 'GEMINI_API_KEY no configurada' }, { status: 503 });
   }
 
-  // Otherwise it's a food log entry
   try {
-    const data = foodSchema.parse(body);
-    const date = data.logged_at || new Date().toISOString().slice(0, 10);
+    const body = await req.json();
+    const { description, servings } = schema.parse(body);
 
-    const rows = await sql`
-      INSERT INTO food_logs
-        (user_id, food_name, kcal, protein_g, carbs_g, fat_g, meal_type, logged_at)
-      VALUES
-        (${auth.userId}, ${data.food_name}, ${data.kcal}, ${data.protein_g},
-         ${data.carbs_g}, ${data.fat_g}, ${data.meal_type}, ${date})
-      RETURNING *
-    `;
-    return NextResponse.json({ food: rows[0] }, { status: 201 });
+    // Gemini 2.0 Flash — tier gratuito
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: PROMPT(description, servings) }] }],
+          generationConfig: {
+            temperature: 0.2,      // bajo para respuestas consistentes
+            maxOutputTokens: 1024,
+            responseMimeType: 'application/json', // fuerza JSON directo
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('Gemini API error:', err);
+      return NextResponse.json({ error: 'Error al consultar Gemini' }, { status: 502 });
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    let estimate: FoodEstimate;
+    try {
+      const clean = text.replace(/```json|```/g, '').trim();
+      estimate = JSON.parse(clean);
+    } catch {
+      console.error('Failed to parse Gemini response:', text);
+      return NextResponse.json(
+        { error: 'No se pudo procesar la respuesta', raw: text },
+        { status: 422 }
+      );
+    }
+
+    if (!estimate.kcal || !estimate.food_name) {
+      return NextResponse.json({ error: 'Respuesta incompleta' }, { status: 422 });
+    }
+
+    return NextResponse.json({ estimate });
+
   } catch (err) {
-    if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
-    throw err;
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: err.errors[0].message }, { status: 400 });
+    }
+    console.error('Estimate error:', err);
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
-}
-
-// DELETE /api/nutrition?id=uuid
-export async function DELETE(req: NextRequest) {
-  const auth = getAuthUserFromRequest(req);
-  if (!auth) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
-
-  const id = new URL(req.url).searchParams.get('id');
-  if (!id) return NextResponse.json({ error: 'Falta id' }, { status: 400 });
-
-  await sql`DELETE FROM food_logs WHERE id = ${id} AND user_id = ${auth.userId}`;
-  return NextResponse.json({ ok: true });
 }
