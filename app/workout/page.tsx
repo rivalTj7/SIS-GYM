@@ -382,21 +382,17 @@ export default function WorkoutPage() {
                     {isExpanded && (
                       <div style={{ paddingLeft: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid #2a2a2a' }}>
                         <div style={{ fontSize: 12, color: '#888', lineHeight: 1.6 }}>💡 {ex.tip}</div>
-                        <a
-                          href={`https://www.youtube.com/watch?v=${ex.videoId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={e => e.stopPropagation()}
+                        <button
+                          onClick={e => { e.stopPropagation(); setVideoId(ex.videoId); setVideoTitle(ex.name); }}
                           style={{
                             marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7,
                             background: 'transparent', border: '1.5px solid #2a2a2a',
                             color: '#666', borderRadius: 8, padding: '7px 14px',
-                            fontSize: 12, fontWeight: 700, textDecoration: 'none',
-                            transition: 'all 0.15s',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer',
                           }}
                         >
                           ▶ Ver técnica
-                        </a>
+                        </button>
                       </div>
                     )}
                   </div>
