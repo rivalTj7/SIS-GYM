@@ -34,3 +34,23 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+## Nuevas features
+
+### 🤖 Estimador de macros con IA
+- Describís tu comida en texto libre: *"pan con huevo frito y salchicha"*
+- Claude analiza y devuelve: calorías, proteína, carbos, grasa
+- Desglose por ingrediente
+- Indicador de confianza (alta/media/baja)
+- Un toque para guardar en tu log del día
+
+Requiere `ANTHROPIC_API_KEY` en `.env.local`
+Obtené la tuya en: [console.anthropic.com](https://console.anthropic.com)
+
+### 🏋️ Modal de selección gym/casa
+- Al abrir cualquier sesión del día aparece: **"¿Vas al gym hoy?"**
+- Dos opciones claras: 🏛️ GYM o 🏠 CASA
+- La sesión se guarda en Neon con el modo elegido
+- Podés cambiar el modo después si necesitás

@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { sql, getFoodLogs } from '@/lib/db';
@@ -88,8 +86,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ profile: rows[0] });
     } catch (err) {
       if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
-      console.error('Profile save error:', err);
-      return NextResponse.json({ error: 'Error al guardar perfil' }, { status: 500 });
+      throw err;
     }
   }
 
@@ -109,8 +106,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ food: rows[0] }, { status: 201 });
   } catch (err) {
     if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
-    console.error('Food log error:', err);
-    return NextResponse.json({ error: 'Error al guardar alimento' }, { status: 500 });
+    throw err;
   }
 }
 
