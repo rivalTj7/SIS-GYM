@@ -1,109 +1,122 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { z } from 'zod';
+import { sql, getFoodLogs } from '@/lib/db';
 import { getAuthUserFromRequest } from '@/lib/auth';
+import { calculateTDEE, calculateGoalCalories, calculateMacros } from '@/lib/utils';
 
-// ── Helpers ────────────────────────────────────────────────
-function calcTDEE(sex: string, age: number, weight_kg: number, height_cm: number, activity: string) {
-  const bmr =
-    sex === 'f'
-      ? 10 * weight_kg + 6.25 * height_cm - 5 * age - 161
-      : 10 * weight_kg + 6.25 * height_cm - 5 * age + 5;
-  const factor = activity === 'sed' ? 1.2 : activity === 'hi' ? 1.75 : 1.55;
-  return Math.round(bmr * factor);
-}
+const profileSchema = z.object({
+  sex: z.enum(['m', 'f']),
+  age: z.number().int().min(15).max(80),
+  weight_kg: z.number().min(40).max(200),
+  height_cm: z.number().int().min(140).max(220),
+  activity: z.enum(['sed', 'med', 'hi']),
+  goal: z.enum(['def', 'mant', 'vol', 'agr']),
+});
 
-function calcGoalKcal(tdee: number, goal: string) {
-  if (goal === 'def') return tdee - 400;
-  if (goal === 'vol') return tdee + 400;
-  if (goal === 'agr') return tdee - 500;
-  return tdee; // mant
-}
+const foodSchema = z.object({
+  food_name: z.string().min(1).max(100),
+  kcal: z.number().int().positive(),
+  protein_g: z.number().min(0).default(0),
+  carbs_g: z.number().min(0).default(0),
+  fat_g: z.number().min(0).default(0),
+  meal_type: z.enum(['desayuno', 'almuerzo', 'cena', 'snack']).default('snack'),
+  logged_at: z.string().optional(),
+});
 
-// ── GET /api/nutrition?date=YYYY-MM-DD ─────────────────────
+// GET /api/nutrition?date=2024-01-15
 export async function GET(req: NextRequest) {
   const auth = getAuthUserFromRequest(req);
   if (!auth) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-  const date = req.nextUrl.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
+  const { searchParams } = new URL(req.url);
+  const date = searchParams.get('date') || new Date().toISOString().slice(0, 10);
 
-  const foods = await sql`
-    SELECT id, food_name, kcal, protein_g, carbs_g, fat_g, meal_type
-    FROM food_logs
-    WHERE user_id = ${auth.userId} AND logged_at = ${date}
-    ORDER BY created_at ASC
-  `;
+  const [profileRows, foods] = await Promise.all([
+    sql`SELECT * FROM user_profiles WHERE user_id = ${auth.userId} LIMIT 1`,
+    getFoodLogs(auth.userId, date),
+  ]);
 
+  const profile = profileRows[0] || null;
+
+  // Daily totals
   const totals = foods.reduce(
     (acc, f) => ({
-      kcal:      acc.kcal      + Number(f.kcal),
+      kcal: acc.kcal + Number(f.kcal),
       protein_g: acc.protein_g + Number(f.protein_g),
-      carbs_g:   acc.carbs_g   + Number(f.carbs_g),
-      fat_g:     acc.fat_g     + Number(f.fat_g),
+      carbs_g: acc.carbs_g + Number(f.carbs_g),
+      fat_g: acc.fat_g + Number(f.fat_g),
     }),
     { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
   );
 
-  return NextResponse.json({ foods, totals });
+  return NextResponse.json({ profile, foods, totals, date });
 }
 
-// ── POST /api/nutrition ────────────────────────────────────
-// Body shape A — food log: { food_name, kcal, protein_g, carbs_g, fat_g, meal_type, logged_at? }
-// Body shape B — profile:  { sex, age, weight_kg, height_cm, activity, goal }
+// POST /api/nutrition — profile OR food log
 export async function POST(req: NextRequest) {
   const auth = getAuthUserFromRequest(req);
   if (!auth) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
   const body = await req.json();
 
-  // ── Profile save ───────────────────────────────────────
-  if ('sex' in body) {
-    const { sex, age, weight_kg, height_cm, activity, goal } = body;
-    if (!sex || !age || !weight_kg || !height_cm || !activity || !goal) {
-      return NextResponse.json({ error: 'Faltan campos del perfil' }, { status: 400 });
-    }
+  // If it has sex/age/weight etc → it's a profile update
+  if (body.sex !== undefined) {
+    try {
+      const data = profileSchema.parse(body);
+      const tdee = calculateTDEE(data.sex, data.age, data.weight_kg, data.height_cm, data.activity);
+      const goalKcal = calculateGoalCalories(tdee, data.goal);
+      const { protein, carbs } = calculateMacros(goalKcal, data.weight_kg);
 
-    const tdee     = calcTDEE(sex, Number(age), Number(weight_kg), Number(height_cm), activity);
-    const goal_kcal = calcGoalKcal(tdee, goal);
-    const goal_prot = Math.round(Number(weight_kg) * 2);
-    const goal_carb = Math.round((goal_kcal - goal_prot * 4 - Math.round(Number(weight_kg) * 0.8) * 9) / 4);
+      const rows = await sql`
+        INSERT INTO user_profiles
+          (user_id, sex, age, weight_kg, height_cm, activity, goal, tdee, goal_kcal, goal_prot, goal_carb)
+        VALUES
+          (${auth.userId}, ${data.sex}, ${data.age}, ${data.weight_kg},
+           ${data.height_cm}, ${data.activity}, ${data.goal},
+           ${tdee}, ${goalKcal}, ${protein}, ${carbs})
+        ON CONFLICT (user_id) DO UPDATE SET
+          sex = EXCLUDED.sex, age = EXCLUDED.age,
+          weight_kg = EXCLUDED.weight_kg, height_cm = EXCLUDED.height_cm,
+          activity = EXCLUDED.activity, goal = EXCLUDED.goal,
+          tdee = EXCLUDED.tdee, goal_kcal = EXCLUDED.goal_kcal,
+          goal_prot = EXCLUDED.goal_prot, goal_carb = EXCLUDED.goal_carb,
+          updated_at = NOW()
+        RETURNING *
+      `;
+      return NextResponse.json({ profile: rows[0] });
+    } catch (err) {
+      if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
+      throw err;
+    }
+  }
+
+  // Otherwise it's a food log entry
+  try {
+    const data = foodSchema.parse(body);
+    const date = data.logged_at || new Date().toISOString().slice(0, 10);
 
     const rows = await sql`
-      INSERT INTO user_profiles (user_id, sex, age, weight_kg, height_cm, activity, goal, tdee, goal_kcal, goal_prot, goal_carb)
-      VALUES (${auth.userId}, ${sex}, ${Number(age)}, ${Number(weight_kg)}, ${Number(height_cm)}, ${activity}, ${goal}, ${tdee}, ${goal_kcal}, ${goal_prot}, ${goal_carb})
-      ON CONFLICT (user_id) DO UPDATE SET
-        sex = EXCLUDED.sex, age = EXCLUDED.age, weight_kg = EXCLUDED.weight_kg,
-        height_cm = EXCLUDED.height_cm, activity = EXCLUDED.activity, goal = EXCLUDED.goal,
-        tdee = EXCLUDED.tdee, goal_kcal = EXCLUDED.goal_kcal, goal_prot = EXCLUDED.goal_prot,
-        goal_carb = EXCLUDED.goal_carb, updated_at = NOW()
+      INSERT INTO food_logs
+        (user_id, food_name, kcal, protein_g, carbs_g, fat_g, meal_type, logged_at)
+      VALUES
+        (${auth.userId}, ${data.food_name}, ${data.kcal}, ${data.protein_g},
+         ${data.carbs_g}, ${data.fat_g}, ${data.meal_type}, ${date})
       RETURNING *
     `;
-
-    return NextResponse.json({ profile: rows[0] });
+    return NextResponse.json({ food: rows[0] }, { status: 201 });
+  } catch (err) {
+    if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
+    throw err;
   }
-
-  // ── Food log save ──────────────────────────────────────
-  const { food_name, kcal, protein_g = 0, carbs_g = 0, fat_g = 0, meal_type = 'snack', logged_at } = body;
-  if (!food_name || kcal == null) {
-    return NextResponse.json({ error: 'food_name y kcal son requeridos' }, { status: 400 });
-  }
-
-  const date = logged_at ?? new Date().toISOString().slice(0, 10);
-  const rows = await sql`
-    INSERT INTO food_logs (user_id, food_name, kcal, protein_g, carbs_g, fat_g, meal_type, logged_at)
-    VALUES (${auth.userId}, ${food_name}, ${Number(kcal)}, ${Number(protein_g)}, ${Number(carbs_g)}, ${Number(fat_g)}, ${meal_type}, ${date})
-    RETURNING id, food_name, kcal, protein_g, carbs_g, fat_g, meal_type, logged_at
-  `;
-
-  return NextResponse.json({ food: rows[0] }, { status: 201 });
 }
 
-// ── DELETE /api/nutrition?id=xxx ───────────────────────────
+// DELETE /api/nutrition?id=uuid
 export async function DELETE(req: NextRequest) {
   const auth = getAuthUserFromRequest(req);
   if (!auth) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-  const id = req.nextUrl.searchParams.get('id');
-  if (!id) return NextResponse.json({ error: 'id requerido' }, { status: 400 });
+  const id = new URL(req.url).searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'Falta id' }, { status: 400 });
 
   await sql`DELETE FROM food_logs WHERE id = ${id} AND user_id = ${auth.userId}`;
   return NextResponse.json({ ok: true });
