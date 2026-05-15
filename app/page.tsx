@@ -42,1038 +42,352 @@ const DAY_IDX = (new Date().getDay() + 6) % 7;
 // - Cardio integrado en el entrenamiento (HIIT post-fuerza)
 // ================================================================
 
+
+// ================================================================
+// BURN GT PRO — RUTINA 6 DÍAS (PHUL ADAPTADO 6 DÍAS)
+// Basada en Power Hypertrophy Upper Lower (Brandon Campbell)
+// Adaptada para 6 días, principiante-intermedio, físico atlético
+//
+// SPLIT:
+// LUN: Pecho + Hombros + Tríceps (Empuje A)
+// MAR: Espalda + Bíceps + Antebrazo (Tracción A)
+// MIÉ: Piernas + Glúteos (Pierna A)
+// JUE: Pecho + Hombros + Tríceps (Empuje B — variantes)
+// VIE: Espalda + Bíceps (Tracción B — variantes)
+// SÁB: Piernas + Core (Pierna B + Core)
+// DOM: Descanso
+//
+// ESTRUCTURA DE CADA EJERCICIO:
+// - Nombre exacto
+// - Series × Reps (ej: 4 × 8–12)
+// - Descanso entre series
+// - Video YouTube ID
+// - Tip técnico (1 línea, directo)
+// ================================================================
+
 const PLAN = [
 
-// ════════════════════════════════════════════════════════════════
-// LUNES — UPPER A: Empuje Dominante
-// Pecho · Hombros Frontales/Laterales · Tríceps
-// Objetivo del día: Cargas máximas en empuje horizontal y vertical
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════
+// LUNES — EMPUJE A
+// Pecho · Hombros · Tríceps
+// ════════════════════════════════════════════
 {
-  day: 'LUN', label: 'UPPER A — EMPUJE', rest: false, split: 'upperA',
-  focus: 'Pecho · Hombros · Tríceps',
-  coachNote: 'Día de empuje dominante. Prioridad en el press de banca y press militar. Cada semana intenta agregar 1 rep o 2.5kg. Si completás todas las reps con buena técnica, subí el peso la próxima sesión.',
-
+  day: 'LUN', label: 'PECHO · HOMBROS · TRÍCEPS', rest: false, split: 'pushA',
   gym: {
-    focus: 'Pecho · Hombros frontales y laterales · Tríceps',
-    warmup: '5 min bicicleta + rotaciones de hombro + 1 serie ligera de cada ejercicio principal',
+    focus: 'Pecho · Hombros · Tríceps',
     blocks: [
       {
-        t: 'BLOQUE 1 — FUERZA BASE (el más importante del día)',
-        s: false,
-        e: [
-          {
-            n: 'Press de Banca con Barra',
-            muscle: 'Pecho esternal + Deltoides anterior + Tríceps',
-            sets: '4', reps: '6–8', rest: 120, tempo: '3-1-1',
-            v: 'rT7DgCr-3pg', vs: 'Escápulas retraídas y deprimidas. Barra baja al pecho bajo (tetillas). Arco natural.',
-            tip: 'TÉCNICA CLAVE: Antes de bajar la barra, aprieta el banco con los omóplatos como si quisieras romperlo. Pies firmes en el suelo. Baja en 3 segundos contando, pausa 1 seg en el pecho, explota al subir. El primer ejercicio del día es donde ponés el mayor peso — no te guardes nada.',
-            progression: 'Semanas 1-2: 50-60% de tu máximo. Semana 3+: sube 2.5kg si completás las 4×8.',
-            er: [
-              { l: '❌ Error #1', t: 'Rebotar la barra en el pecho para ganar inercia. Controla la bajada siempre.' },
-              { l: '❌ Error #2', t: 'Nalgas que se levantan del banco. Si pasa, bajá el peso.' },
-              { l: '❌ Error #3', t: 'Codos a 90° muy abiertos. Mantenelos a 45-75° del cuerpo.' }
-            ]
-          },
-          {
-            n: 'Press Militar con Barra (de pie)',
-            muscle: 'Deltoides anterior + Tríceps + Core estabilizador',
-            sets: '4', reps: '6–8', rest: 120, tempo: '3-1-1',
-            v: 'qEwKCR5JCog', vs: 'Core apretado como si te fueran a pegar. Barra baja frente a la cara.',
-            tip: 'El ejercicio que más define si tenés hombros de atleta o no. De pie activa el core como estabilizador. Agarre al ancho de hombros. Barra baja hasta la barbilla frente a la cara. Aprieta los glúteos para proteger la espalda baja.',
-            progression: 'Este ejercicio progresa más lento que el press de banca. Normal. Sé paciente.',
-            er: [
-              { l: '❌ Error #1', t: 'Arquearse hacia atrás para empujar — se convierte en press inclinado y lesiona la zona lumbar.' },
-              { l: '❌ Error #2', t: 'Barra detrás de la nuca — posición peligrosa para el manguito rotador.' }
-            ]
-          }
+        t: 'PECHO', s: false, e: [
+          { n: 'Press de Banca con Barra',          sets: '4', reps: '5–6',   rs: 180, v: 'rT7DgCr-3pg', tip: 'Escápulas retraídas todo el tiempo. Barra baja hasta rozar el pecho. Empuje explosivo.', er: [{l:'❌',t:'Rebotar la barra en el pecho'},{l:'❌',t:'Nalgas despegadas del banco'}] },
+          { n: 'Press Inclinado con Mancuernas',    sets: '4', reps: '8–10',  rs: 90,  v: '8iPEnn-ltC8', tip: 'Banco a 30°. Baja hasta sentir el estiramiento del pecho. No rebotes abajo.', er: [{l:'❌',t:'Banco a 45° o más → activa más hombro que pecho'}] },
+          { n: 'Aperturas en Cable (Pec Deck)',      sets: '3', reps: '12–15', rs: 60,  v: 'rT7DgCr-3pg', tip: 'Movimiento de abrazo. Énfasis en el estiramiento. No uses momentum.', er: [] },
+          { n: 'Pullover con Mancuerna',             sets: '3', reps: '12',    rs: 60,  v: 'FK4jEXqJHZA', tip: 'Brazos casi rectos. Baja detrás de la cabeza hasta sentir el dorsal y pecho. Sube exhalando.', er: [] },
         ]
       },
       {
-        t: 'BLOQUE 2 — HIPERTROFIA (volumen de pecho)',
-        s: false,
-        e: [
-          {
-            n: 'Press Inclinado con Mancuernas (30°)',
-            muscle: 'Pecho clavicular (superior) + Deltoides anterior',
-            sets: '3', reps: '10–12', rest: 75, tempo: '3-0-1',
-            v: '8iPEnn-ltC8', vs: 'Banco a 30° máximo. Mancuernas bajan hasta sentir el estiramiento del pecho.',
-            tip: 'El banco a 30° (no 45°) activa más pecho superior y menos hombro. Baja las mancuernas hasta que sientas el estiramiento completo del pecho. El rango de movimiento completo es lo que construye el músculo, no el peso.',
-            er: [
-              { l: '❌ Error #1', t: 'Banco a 45° o más — activa más el hombro anterior que el pecho superior.' },
-              { l: '❌ Error #2', t: 'No llegar al estiramiento completo abajo. El músculo crece en el estiramiento.' }
-            ]
-          },
-          {
-            n: 'Aperturas en Cable (Peck Deck o polea)',
-            muscle: 'Pecho (énfasis en aducción) + Estiramiento máximo',
-            sets: '3', reps: '12–15', rest: 60, tempo: '3-1-1',
-            v: 'rT7DgCr-3pg', vs: 'Movimiento de abrazo. Énfasis en el estiramiento y la contracción completa.',
-            tip: 'Este ejercicio no es de fuerza — es de sentir el pecho. Usa poco peso y enfocáte en el estiramiento máximo y la contracción apretada al final. Si no sentís el pecho trabajar, el peso está muy alto.',
-            er: [
-              { l: '❌ Error #1', t: 'Codos completamente rectos — tensión en el bíceps. Mantenelos ligeramente doblados.' }
-            ]
-          }
+        t: 'HOMBROS', s: false, e: [
+          { n: 'Press Arnold con Mancuernas',       sets: '3', reps: '10–12', rs: 75,  v: 'qEwKCR5JCog', tip: 'Empieza palmas hacia ti. Gira al subir. Trabaja las 3 cabezas del deltoides.', er: [{l:'❌',t:'Arquearse hacia atrás al empujar'}] },
+          { n: 'Elevaciones Laterales en Polea',    sets: '4', reps: '15–20', rs: 45,  v: 'FeJbvGm_09k', tip: 'Sube hasta paralelo, no más. Baja en 2 seg. La polea da tensión constante.', er: [{l:'❌',t:'Subir más allá del paralelo → impingement'}] },
+          { n: 'Pájaros (Reverse Fly Inclinado)',   sets: '3', reps: '15',    rs: 45,  v: 'HSoHeSjvIdY', tip: 'Torso paralelo al suelo. Codos ligeramente doblados. Activa el deltoides posterior.', er: [] },
         ]
       },
       {
-        t: 'BLOQUE 3 — HOMBROS LATERALES (ancho atlético)',
-        s: false,
-        e: [
-          {
-            n: 'Elevaciones Laterales en Polea (cable lateral raise)',
-            muscle: 'Deltoides medial (cabeza lateral) — define el ancho del hombro',
-            sets: '4', reps: '15–20', rest: 45, tempo: '2-1-2',
-            v: 'FeJbvGm_09k', vs: 'La polea da tensión constante. Brazo ligeramente doblado. Sube hasta paralelo.',
-            tip: 'El deltoides medial es el músculo que da la apariencia de hombros anchos y cintura delgada — la silueta atlética en V. La polea es SUPERIOR a la mancuerna porque da tensión constante incluso abajo. 15-20 reps con peso moderado, enfocáte en sentir el quemón lateral.',
-            er: [
-              { l: '❌ Error #1', t: 'Subir el hombro al elevar (encogimiento). El hombro debe estar deprimido todo el tiempo.' },
-              { l: '❌ Error #2', t: 'Subir más allá del paralelo — impingement del manguito rotador.' }
-            ]
-          },
-          {
-            n: 'Face Pulls con Cuerda (polea alta)',
-            muscle: 'Deltoides posterior + Manguito rotador + Romboides',
-            sets: '3', reps: '15–20', rest: 45, tempo: '2-2-1',
-            v: 'HSoHeSjvIdY', vs: 'Hala hacia la cara separando la cuerda. Codos arriba al nivel de los hombros.',
-            tip: 'El ejercicio que previene lesiones de hombro a largo plazo. El deltoides posterior y el manguito rotador son los músculos más ignorados y los que más lesiones causan. Hazlo SIEMPRE en días de empuje. Cuerda hacia la nariz separando las manos, codos arriba.',
-            er: [
-              { l: '❌ Error #1', t: 'Codos abajo — convierte en remo. Los codos deben estar a la altura de la cara.' }
-            ]
-          }
+        t: 'TRÍCEPS', s: false, e: [
+          { n: 'Extensión en Polea (cuerda)',        sets: '3', reps: '12–15', rs: 60,  v: 'vB5OHsJ3EMc', tip: 'Codos fijos al cuerpo. Separa la cuerda al final para máxima contracción.', er: [{l:'❌',t:'Codos que se mueven hacia adelante'}] },
+          { n: 'Press Francés con Barra EZ',         sets: '3', reps: '10–12', rs: 60,  v: 'vB5OHsJ3EMc', tip: 'Codos apuntan al techo. Baja hasta la frente. No te golpees.', er: [{l:'❌',t:'Codos que se abren hacia los lados'}] },
         ]
       },
-      {
-        t: 'BLOQUE 4 — TRÍCEPS (volumen)',
-        s: true,
-        e: [
-          {
-            n: 'Extensión en Polea con Cuerda (tricep pushdown)',
-            muscle: 'Tríceps (cabeza lateral y medial)',
-            sets: '3', reps: '12–15', rest: 0, tempo: '2-1-2',
-            v: 'vB5OHsJ3EMc', vs: 'Codos pegados al cuerpo. Separa la cuerda al final para máxima contracción.',
-            tip: 'El tríceps es ⅔ del brazo. Si querés brazos grandes, entrenás tríceps, no bíceps. Codos completamente fijos al cuerpo — son el punto de pivote. Separa la cuerda al final del movimiento para activar más la cabeza lateral.',
-            er: [{ l: '❌ Error', t: 'Codos que se mueven hacia adelante y atrás. Son un punto fijo.' }]
-          },
-          {
-            n: 'Extensión Overhead con Mancuerna (o cable)',
-            muscle: 'Tríceps cabeza larga (solo se activa con el brazo sobre la cabeza)',
-            sets: '3', reps: '12–15', rest: 60, tempo: '3-0-1',
-            v: 'vB5OHsJ3EMc', vs: 'Mancuerna detrás de la cabeza. Codos apuntan al techo. Baja completo.',
-            tip: 'La cabeza larga del tríceps (la más grande) SOLO se activa completamente cuando el brazo está elevado sobre la cabeza. Por eso este ejercicio es obligatorio — sin él, el tríceps queda incompleto.',
-            er: [{ l: '❌ Error', t: 'Codos que se abren hacia los lados al bajar. Mantené los codos apuntando al techo.' }]
-          }
-        ]
-      },
-      {
-        t: 'FINISHER — CARDIO METABÓLICO (no opcional)',
-        s: false,
-        e: [
-          {
-            n: 'HIIT en Caminadora o Elíptica',
-            muscle: 'Sistema cardiovascular + quema calórica post-entrenamiento',
-            sets: '1', reps: '20 min', rest: 0,
-            v: 'xSoHPV-GSXM', vs: '30 seg al 85-90% + 90 seg al 50-55%. 8 ciclos.',
-            tip: 'Protocolo HIIT: 30 seg sprint (nivel 8-9/10 de esfuerzo) + 90 seg recuperación activa (nivel 4-5). 8 ciclos = 16 min + 2 min calentamiento + 2 min vuelta a la calma. Este finisher post-fuerza genera EPOC — seguís quemando grasa hasta 24-48h después.',
-            er: [{ l: '💡 Clave', t: 'Los sprints tienen que ser REALMENTE intensos. Si podés hablar normalmente, no son suficientemente intensos.' }]
-          }
-        ]
-      }
     ]
   },
-
   casa: {
-    focus: 'Pecho · Hombros · Tríceps · Sin equipamiento',
-    warmup: '3 min trote en el lugar + rotaciones de hombro + 10 flexiones lentas de calentamiento',
+    focus: 'Pecho · Hombros · Tríceps (sin equipamiento)',
     blocks: [
       {
-        t: 'BLOQUE FUERZA — Empuje vertical y horizontal',
-        s: false,
-        e: [
-          {
-            n: 'Flexiones con Pausa (3-1-1 tempo)',
-            muscle: 'Pecho + Tríceps + Core',
-            sets: '4', reps: '8–12', rest: 90, tempo: '3-1-1',
-            v: 'IODxDxX7oi4', vs: 'Baja en 3 seg, pausa 1 seg en el suelo, explota al subir.',
-            tip: 'La pausa elimina el rebote y obliga al músculo a trabajar desde cero en cada rep. Cuerpo recto como tabla. Codos a 45° del cuerpo. Si hacés 12 fácil: elevá los pies en una silla.',
-            er: [{ l: '❌ Error', t: 'Cadera arriba o abajo. El cuerpo debe ser una línea recta perfecta.' }]
-          },
-          {
-            n: 'Pike Push-ups con Pies Elevados',
-            muscle: 'Deltoides anterior + Tríceps (equivale al press militar)',
-            sets: '4', reps: '8–10', rest: 90, tempo: '3-0-1',
-            v: 'sposDXWEB0A', vs: 'Pies en silla, caderas bien arriba, cabeza baja entre los brazos.',
-            tip: 'Con los pies en una silla de 40-50cm el ángulo se vuelve casi vertical — es el equivalente al press militar en casa. La clave es que las caderas estén bien altas formando una V invertida.',
-            er: [{ l: '❌ Error', t: 'Caderas bajas — convierte en flexión normal, no en press vertical.' }]
-          }
+        t: 'PECHO', s: false, e: [
+          { n: 'Flexiones con Pausa (3-1-1)',         sets: '4', reps: '10–15', rs: 90, v: 'IODxDxX7oi4', tip: 'Baja en 3 seg, pausa 1 seg, explota al subir. Cuerpo recto como tabla.', er: [{l:'❌',t:'Cadera arriba o abajo'}] },
+          { n: 'Flexiones Inclinadas (pies en silla)', sets: '4', reps: '10–12', rs: 75, v: 'IODxDxX7oi4', tip: 'Pies en silla a 45-50cm. Trabaja el pecho superior igual que press inclinado.', er: [] },
+          { n: 'Aperturas con Botellas (suelo)',       sets: '3', reps: '15',    rs: 60, v: 'rT7DgCr-3pg', tip: 'Acostado en el suelo. Abre hasta casi tocar el suelo. Énfasis en el estiramiento.', er: [] },
         ]
       },
       {
-        t: 'BLOQUE HIPERTROFIA — Volumen de empuje',
-        s: true,
-        e: [
-          {
-            n: 'Flexiones Inclinadas (pies en silla)',
-            muscle: 'Pecho superior + Deltoides anterior',
-            sets: '3', reps: '12–15', rest: 0, tempo: '2-0-1',
-            v: 'IODxDxX7oi4', vs: 'Pies elevados aproximadamente 50cm. Activa el pecho superior.',
-            tip: 'El ángulo de los pies elevados replica el press inclinado. Cuanto más elevados los pies, más pecho superior. Ideal para desarrollar la zona alta del pecho que da el aspecto atlético.',
-            er: []
-          },
-          {
-            n: 'Dips en Silla (tríceps)',
-            muscle: 'Tríceps + Pecho inferior',
-            sets: '3', reps: '12–15', rest: 60, tempo: '3-1-1',
-            v: 'l4kQd9eWclE', vs: 'Cuerpo vertical pegado a la silla. Baja hasta 90° en los codos.',
-            tip: 'Para aislar el tríceps: mantené el cuerpo completamente vertical. Si te inclinás hacia adelante trabajás más el pecho inferior. Baja hasta 90°, no más para proteger el hombro.',
-            er: [{ l: '❌ Error', t: 'Bajar más de 90° — tensión excesiva en el hombro anterior.' }]
-          }
+        t: 'HOMBROS', s: false, e: [
+          { n: 'Pike Push-ups (pies elevados)',        sets: '4', reps: '10–12', rs: 75, v: 'sposDXWEB0A', tip: 'Caderas bien altas en V invertida. Cabeza baja entre los brazos. = Press militar.', er: [] },
+          { n: 'Elevaciones Laterales con Botellas',  sets: '4', reps: '20',    rs: 45, v: 'FeJbvGm_09k', tip: 'Botellas 1.5L. Sube hasta paralelo. Baja en 2 seg. 20 reps compensan el peso bajo.', er: [] },
         ]
       },
       {
-        t: 'HOMBROS LATERALES + FINISHER',
-        s: false,
-        e: [
-          {
-            n: 'Elevaciones Laterales con Botellas de Agua',
-            muscle: 'Deltoides medial',
-            sets: '4', reps: '20–25', rest: 45, tempo: '2-1-2',
-            v: 'FeJbvGm_09k', vs: 'Botellas de 1.5L llenas. Sube hasta paralelo. Baja en 2 seg.',
-            tip: 'El peso bajo requiere más reps para el estímulo correcto. 20-25 reps con botellas de 1.5L es suficiente. Enfocáte en sentir el quemón lateral en el hombro.',
-            er: []
-          },
-          {
-            n: 'Circuito Finisher: Burpees + Mountain Climbers',
-            muscle: 'Full body metabólico',
-            sets: '4', reps: '10 burpees + 30 seg MC', rest: 60, tempo: '',
-            v: 'dZgVxmf6jkA', vs: '10 burpees sin pausa directo a 30 seg de mountain climbers. 60 seg descanso.',
-            tip: 'Sin pausa entre los burpees y los mountain climbers. Este finisher replica el efecto metabólico del HIIT en caminadora.',
-            er: []
-          }
+        t: 'TRÍCEPS', s: false, e: [
+          { n: 'Dips en Silla',                       sets: '3', reps: '12–15', rs: 60, v: 'l4kQd9eWclE', tip: 'Cuerpo vertical. Baja hasta 90°. Para tríceps: no te inclines hacia adelante.', er: [] },
+          { n: 'Extensión Overhead con Mochila',      sets: '3', reps: '12',    rs: 60, v: 'vB5OHsJ3EMc', tip: 'Mochila con libros detrás de la cabeza. Codos apuntan al techo. Baja completo.', er: [] },
         ]
-      }
+      },
     ]
   }
 },
 
-// ════════════════════════════════════════════════════════════════
-// MARTES — LOWER A: Cuádriceps Dominante
-// Sentadilla · Prensa · Extensión · Pantorrillas · HIIT pierna
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════
+// MARTES — TRACCIÓN A
+// Espalda · Bíceps · Antebrazo
+// ════════════════════════════════════════════
 {
-  day: 'MAR', label: 'LOWER A — CUÁDRICEPS', rest: false, split: 'lowerA',
-  focus: 'Cuádriceps · Glúteos · Pantorrillas',
-  coachNote: 'Las piernas son el motor del cuerpo atlético. Un error de principiante es ignorarlas o entrenarlas con poco peso. Las piernas son los músculos más grandes — entrenarlas pesado dispara la testosterona y hormona de crecimiento que beneficia TODO el cuerpo.',
+  day: 'MAR', label: 'ESPALDA · BÍCEPS · ANTEBRAZO', rest: false, split: 'pullA',
+  gym: {
+    focus: 'Dorsal · Trapecio · Romboides · Bíceps · Antebrazo',
+    blocks: [
+      {
+        t: 'ESPALDA', s: false, e: [
+          { n: 'Dominadas al Fallo (o Jalón al pecho)', sets: '4', reps: 'al fallo (mín 4)', rs: 180, v: 'eGo4IYlbE5g', tip: 'Si podés hacer +8 dominadas: añade lastre. Baja hasta extensión completa. Pecho al bar.', er: [{l:'❌',t:'Balancearse para subir'},{l:'❌',t:'No llegar a extensión completa abajo'}] },
+          { n: 'Jalón tras nuca',                        sets: '3', reps: '10–12',        rs: 75,  v: 'CAwf7n6Luuc', tip: 'Agarre ancho. Baja hasta tocar la nuca. Codos apuntan al suelo. Contrae la espalda.', er: [{l:'⚠️',t:'Si tenés molestia cervical usa jalón al pecho'}] },
+          { n: 'Remo con Barra (Bent-Over Row)',         sets: '4', reps: '8–10',          rs: 90,  v: 'GZbfZ033f74', tip: 'Torso a 45°. Barra toca el abdomen bajo. No uses impulso del torso.', er: [{l:'❌',t:'Torso que sube y baja para generar inercia'}] },
+          { n: 'Pullover con Mancuerna',                 sets: '3', reps: '12',            rs: 60,  v: 'FK4jEXqJHZA', tip: 'Brazos casi rectos. Baja detrás de la cabeza. Siente el estiramiento del dorsal.', er: [] },
+        ]
+      },
+      {
+        t: 'BÍCEPS', s: false, e: [
+          { n: 'Curl Inclinado con Mancuernas',          sets: '3', reps: '10–12', rs: 75,  v: 'av7-8igSXTs', tip: 'Banco a 45°. Brazos cuelgan. Máximo estiramiento del bíceps al inicio.', er: [] },
+          { n: 'Curl Martillo con Mancuernas',           sets: '3', reps: '10–12', rs: 60,  v: 'TwD-YGVP4Bk', tip: 'Agarre neutro. Trabaja el braquial = más grosor al brazo. Codos fijos.', er: [] },
+          { n: 'Curl Concentrado con Mancuerna',         sets: '3', reps: '12',    rs: 45,  v: 'BZFgeQfOCGE', tip: 'Codo apoyado en la rodilla. Aislamiento total del bíceps. Contrae 1 seg arriba.', er: [] },
+        ]
+      },
+      {
+        t: 'ANTEBRAZO', s: false, e: [
+          { n: 'Curl de Muñeca con Barra (supinación)',  sets: '3', reps: '15–20', rs: 45, v: 'TwD-YGVP4Bk', tip: 'Antebrazos apoyados en el banco. Solo se mueve la muñeca hacia arriba.', er: [] },
+          { n: 'Curl de Muñeca Inverso (pronación)',     sets: '3', reps: '15–20', rs: 45, v: 'TwD-YGVP4Bk', tip: 'Mismo movimiento pero con el dorso hacia arriba. Trabaja el extensor.', er: [] },
+        ]
+      },
+    ]
+  },
+  casa: {
+    focus: 'Espalda · Bíceps · Antebrazo (con mochila)',
+    blocks: [
+      {
+        t: 'ESPALDA', s: false, e: [
+          { n: 'Dominadas (si tenés barra) o Inverted Row', sets: '4', reps: 'al fallo / 12', rs: 120, v: 'eGo4IYlbE5g', tip: 'Dominadas > jalón > inverted row. Usa lo que tenés disponible. Rango completo siempre.', er: [] },
+          { n: 'Remo con Mochila (unilateral)',              sets: '4', reps: '12 × lado',    rs: 75,  v: 'roCP6wCXPqo', tip: 'Mochila con libros. Codo hacia el techo. Contrae la espalda 1 seg en el tope.', er: [] },
+          { n: 'Superman con Pausa',                         sets: '3', reps: '15',           rs: 45,  v: 'z6PJMT2y8GQ', tip: 'Boca abajo. Sube brazos y piernas. Mantén 2 seg. Activa toda la cadena posterior.', er: [] },
+        ]
+      },
+      {
+        t: 'BÍCEPS + ANTEBRAZO', s: false, e: [
+          { n: 'Curl con Mochila (supino)',    sets: '3', reps: '12–15', rs: 60, v: 'av7-8igSXTs', tip: 'Codos fijos. Gira la muñeca al subir. Baja en 3 seg para más estímulo.', er: [] },
+          { n: 'Curl Inverso con Botella',     sets: '3', reps: '15–20', rs: 45, v: 'TwD-YGVP4Bk', tip: 'Agarre con el dorso hacia arriba. Trabaja el braquiorradial y los extensores.', er: [] },
+        ]
+      },
+    ]
+  }
+},
 
+// ════════════════════════════════════════════
+// MIÉRCOLES — PIERNA A
+// Sentadilla · Cuádriceps · Glúteos · Pantorrillas
+// ════════════════════════════════════════════
+{
+  day: 'MIÉ', label: 'PIERNAS · GLÚTEOS · PANTORRILLAS', rest: false, split: 'legA',
   gym: {
     focus: 'Cuádriceps · Glúteos · Pantorrillas',
-    warmup: '10 min bicicleta estática subiendo resistencia + sentadillas de aire lentas × 15',
     blocks: [
       {
-        t: 'BLOQUE 1 — REY DEL DÍA (no lo saltes, no reduzcas el peso)',
-        s: false,
-        e: [
-          {
-            n: 'Sentadilla con Barra (Back Squat)',
-            muscle: 'Cuádriceps + Glúteos + Isquiotibiales + Core + Espina erectora',
-            sets: '4', reps: '6–8', rest: 180, tempo: '3-1-1',
-            v: 'ultWZbUMPL8', vs: 'Pecho arriba, rodillas sobre los pies, baja hasta paralelo o por debajo.',
-            tip: 'El ejercicio más poderoso del arsenal. Activa más del 70% de la musculatura corporal. TÉCNICA: barra sobre los trapecios (no el cuello), pies al ancho de hombros o ligeramente más, puntas levemente afuera 15-30°. Al bajar: rodillas siguen la dirección de los pies, pecho arriba, cadera por debajo del paralelo si la movilidad lo permite. Inhala al bajar, exhala al subir.',
-            progression: 'Semanas 1-4: aprende el movimiento con barra vacía o poca carga. Esto es lo más importante.',
-            er: [
-              { l: '❌ Error #1', t: 'Rodillas que colapsan hacia adentro (valgo de rodilla). Empújalas hacia afuera activamente.' },
-              { l: '❌ Error #2', t: 'Espalda que se redondea al bajar (butt wink). Trabajá movilidad de cadera primero.' },
-              { l: '❌ Error #3', t: 'Solo bajar a 90° por miedo. La sentadilla profunda es más segura con buena técnica.' }
-            ]
-          }
+        t: 'PIERNA', s: false, e: [
+          { n: 'Sentadilla con Barra',           sets: '4', reps: '5–8',   rs: 180, v: 'ultWZbUMPL8', tip: 'Pecho arriba, rodillas siguen la dirección de los pies. Baja hasta paralelo o más.', er: [{l:'❌',t:'Rodillas que colapsan hacia adentro'},{l:'❌',t:'Espalda redondeada al bajar'}] },
+          { n: 'Peso Muerto con Barra',          sets: '4', reps: '5–6',   rs: 180, v: 'op9kVnSso6Q', tip: 'Espalda NEUTRA. Barra pegada al cuerpo todo el tiempo. Empuja el suelo, no jales.', er: [{l:'❌',t:'Espalda redondeada → riesgo de hernia'},{l:'❌',t:'Barra que se separa del cuerpo'}] },
+          { n: 'Elevación de Talones de Pie',    sets: '3', reps: '15',    rs: 60,  v: 'gwLzBJYoWlQ', tip: 'Barra sobre los hombros. Sube a la máxima punta. Baja el talón por debajo del nivel.', er: [{l:'❌',t:'Rango parcial — sin rango completo no hay crecimiento'}] },
         ]
       },
       {
-        t: 'BLOQUE 2 — VOLUMEN DE CUÁDRICEPS',
-        s: false,
-        e: [
-          {
-            n: 'Prensa de Piernas (45° o horizontal)',
-            muscle: 'Cuádriceps + Glúteos (varía según posición de pies)',
-            sets: '4', reps: '10–12', rest: 90, tempo: '3-0-1',
-            v: 'GvRgijoJ2xY', vs: 'Pies al ancho de hombros en el centro. Baja hasta 90°. Espalda pegada al respaldo.',
-            tip: 'La prensa complementa la sentadilla con mayor aislamiento y volumen seguro. Posición de pies: centro = equilibrado, más arriba = más glúteo, más abajo = más cuádricep. Baja hasta 90° sin que la espalda baja se despegue del respaldo.',
-            er: [
-              { l: '❌ Error #1', t: 'Bloquear las rodillas al extender — impacto articular.' },
-              { l: '❌ Error #2', t: 'Espalda baja que se despega al bajar demasiado — reduce el rango.' }
-            ]
-          },
-          {
-            n: 'Extensión de Cuádriceps (máquina)',
-            muscle: 'Cuádriceps (aislamiento puro)',
-            sets: '3', reps: '15–20', rest: 60, tempo: '2-2-1',
-            v: '4ZDm5EbBAQY', vs: 'Sube explosivo. Mantén 2 seg arriba contrayendo. Baja en 2 seg.',
-            tip: 'El único ejercicio de aislamiento puro del cuádriceps. No es el ejercicio principal — es el finisher de cuádriceps. Usa peso moderado y enfocáte en la contracción máxima en el tope. La pausa de 2 seg arriba duplica el tiempo bajo tensión.',
-            er: [{ l: '❌ Error', t: 'Usar peso muy alto y no llegar a la extensión completa. Rango completo siempre.' }]
-          }
+        t: 'CUÁDRICEPS + GLÚTEOS', s: false, e: [
+          { n: 'Prensa de Piernas',              sets: '4', reps: '10–12', rs: 90,  v: 'GvRgijoJ2xY', tip: 'Pies al ancho de hombros. Baja hasta 90°. No despegues la espalda baja.', er: [{l:'❌',t:'Bloquear las rodillas arriba'}] },
+          { n: 'Hip Thrust con Barra',           sets: '4', reps: '10–12', rs: 90,  v: 'SEdqd1n0cvg', tip: 'Espalda sobre el banco. Empuja desde los talones. Contrae el glúteo 2 seg arriba.', er: [{l:'❌',t:'Hiperextender la espalda baja arriba'}] },
         ]
       },
       {
-        t: 'BLOQUE 3 — GLÚTEO BÁSICO',
-        s: false,
-        e: [
-          {
-            n: 'Hip Thrust con Barra (o mancuerna)',
-            muscle: 'Glúteo mayor (máxima activación posible) + Isquiotibiales',
-            sets: '4', reps: '10–12', rest: 90, tempo: '2-2-1',
-            v: 'SEdqd1n0cvg', vs: 'Espalda en banco. Empuje desde talones. Contrae el glúteo 2 seg en el tope.',
-            tip: 'El hip thrust tiene la mayor activación EMG del glúteo de todos los ejercicios existentes. Espalda sobre el banco a la altura de los omóplatos. Barra sobre la cadera (usá una almohadilla). Empujá desde los talones, no desde los dedos. Contrae el glúteo 2 seg arriba.',
-            er: [
-              { l: '❌ Error #1', t: 'Hiperextender la espalda baja arriba — solo mueve la pelvis.' },
-              { l: '❌ Error #2', t: 'Empujar con los dedos en vez de los talones — activa más cuádriceps que glúteo.' }
-            ]
-          }
+        t: 'TRAPECIO', s: false, e: [
+          { n: 'Encogimientos con Mancuernas',       sets: '3', reps: '12',    rs: 60, v: 'qEwKCR5JCog', tip: 'Sube los hombros al máximo. Mantén 1 seg arriba. Baja controlado. No gires el cuello.', er: [] },
+          { n: 'Encogimientos Traseros con Barra',   sets: '3', reps: '12',    rs: 60, v: 'qEwKCR5JCog', tip: 'Barra detrás del cuerpo. Encoge los hombros hacia las orejas. Activa más el trapecio.', er: [] },
+          { n: 'Encogimientos Inclinado con Barra',  sets: '3', reps: '12',    rs: 60, v: 'qEwKCR5JCog', tip: 'Torso inclinado hacia adelante ~30°. Activa la parte media del trapecio.', er: [] },
         ]
       },
-      {
-        t: 'BLOQUE 4 — PANTORRILLAS',
-        s: false,
-        e: [
-          {
-            n: 'Pantorrillas de Pie en Máquina (o escalón)',
-            muscle: 'Gastrocnemio (parte visible de la pantorrilla)',
-            sets: '4', reps: '15–20', rest: 45, tempo: '2-2-2',
-            v: 'gwLzBJYoWlQ', vs: 'Rango COMPLETO: talón abajo del escalón, punta al máximo arriba. Pausa 2 seg.',
-            tip: 'Las pantorrillas responden SOLO al rango completo y volumen alto. Sin rango completo no crecen. Talón completamente abajo del nivel del escalón al bajar, punta al máximo posible al subir. Pausa 2 seg arriba para eliminar el rebote.',
-            er: [{ l: '❌ Error', t: 'Rango parcial — los talones no bajan lo suficiente. Sin rango completo no hay crecimiento.' }]
-          }
-        ]
-      },
-      {
-        t: 'FINISHER — CARDIO PIERNA',
-        s: false,
-        e: [
-          {
-            n: 'Caminadora Inclinada 10-12% (Walking Pad)',
-            muscle: 'Glúteos + Pantorrillas + Quema calórica sostenida',
-            sets: '1', reps: '20 min', rest: 0,
-            v: 'xSoHPV-GSXM', vs: 'Sin agarrarse del pasamanos. Velocidad 5.5-6 km/h. Brazos libres.',
-            tip: 'Post-pierna, la caminadora inclinada activa glúteos con cada paso y quema calorías sin agotar más los músculos. NO te agarres del pasamanos — eso neutraliza el efecto. 20 min al ritmo que puedas mantener conversación.',
-            er: [{ l: '💡 Clave', t: 'Inclinación alta (10-12%) es lo que hace la diferencia. Velocidad es secundaria.' }]
-          }
-        ]
-      }
     ]
   },
-
   casa: {
-    focus: 'Cuádriceps · Glúteos · Isquios · Sin equipamiento',
-    warmup: '5 min trote + 15 sentadillas lentas + 10 zancadas por lado',
+    focus: 'Piernas · Glúteos · Pantorrillas (sin equipamiento)',
     blocks: [
       {
-        t: 'FUERZA UNILATERAL (más efectivo que bilateral en casa)',
-        s: false,
-        e: [
-          {
-            n: 'Sentadilla Búlgara (Split Squat)',
-            muscle: 'Cuádriceps + Glúteos (unilateral — elimina compensaciones)',
-            sets: '4', reps: '8–10 por pierna', rest: 90, tempo: '3-1-1',
-            v: 'QOVaHwm-Q6U', vs: 'Pie trasero en silla. Baja verticalmente. Rodilla trasera a 2cm del suelo.',
-            tip: 'La sentadilla búlgara es más difícil que la sentadilla con barra y muy efectiva en casa. El trabajo unilateral revela y corrige desbalances entre piernas. Primero dominá el movimiento con tu propio peso, luego añadí mochila con libros.',
-            er: [
-              { l: '❌ Error #1', t: 'Inclinarse hacia adelante con el torso — glúteo en lugar de cuádricep.' },
-              { l: '❌ Error #2', t: 'Rodilla delantera que pasa los dedos del pie en sentido lateral.' }
-            ]
-          },
-          {
-            n: 'Glute Bridge con Pausa (o elevado en sofá)',
-            muscle: 'Glúteo mayor + Isquiotibiales',
-            sets: '4', reps: '20', rest: 60, tempo: '2-3-1',
-            v: 'OUgsJ8-Vi0E', vs: 'Talones pegados al suelo. Sube contrayendo el glúteo. Pausa 3 seg arriba.',
-            tip: 'La pausa de 3 seg arriba es lo que lo hace efectivo sin peso. Para progresar: un solo pie, o hombros en el sofá para mayor rango de movimiento.',
-            er: [{ l: '❌ Error', t: 'Empujar con los dedos del pie. El talón es el punto de contacto principal.' }]
-          }
+        t: 'PIERNA', s: false, e: [
+          { n: 'Sentadilla Búlgara',               sets: '4', reps: '10 × pierna', rs: 90, v: 'QOVaHwm-Q6U', tip: 'Pie trasero en silla. Baja verticalmente. Para más glúteo: inclina el torso al frente.', er: [{l:'❌',t:'Rodilla delantera pasa los dedos del pie lateralmente'}] },
+          { n: 'Hip Thrust Elevado (sofá)',         sets: '4', reps: '15–20',       rs: 75, v: 'OUgsJ8-Vi0E', tip: 'Hombros en el borde del sofá. Talones en el suelo. Pausa 2 seg arriba. Empuja con los talones.', er: [] },
+          { n: 'Sentadilla con Salto',              sets: '4', reps: '15',          rs: 60, v: 'CVaEhXotL7M', tip: 'Profundidad completa. Explota. Aterriza con rodillas dobladas.', er: [] },
         ]
       },
       {
-        t: 'CIRCUITO METABÓLICO DE PIERNA (4 vueltas)',
-        s: false,
-        e: [
-          {
-            n: 'Sentadilla con Salto',
-            muscle: 'Cuádriceps + Glúteos + Sistema cardiovascular',
-            sets: '4', reps: '15', rest: 0, tempo: '',
-            v: 'CVaEhXotL7M', vs: 'Baja a profundidad completa. Explota. Aterriza con rodillas dobladas suave.',
-            tip: 'La potencia explosiva es parte del físico atlético. No solo fuerza lenta. Los saltos entrenan el sistema neuromuscular para generar fuerza rápidamente.',
-            er: [{ l: '❌ Error', t: 'Aterrizar con piernas rectas — impacto en rodillas y tobillos.' }]
-          },
-          {
-            n: 'Zancadas en Reversa',
-            muscle: 'Glúteos + Cuádriceps (más estable que zancada normal)',
-            sets: '4', reps: '12 por pierna', rest: 0, tempo: '3-0-1',
-            v: 'QOVaHwm-Q6U', vs: 'Paso hacia atrás. Rodilla trasera baja. Torso completamente erguido.',
-            tip: 'La zancada en reversa es más controlada que la normal y reduce el estrés en la rodilla delantera. Ideal para principiantes.',
-            er: []
-          },
-          {
-            n: 'Pantorrillas en Escalón',
-            muscle: 'Gastrocnemio + Sóleo',
-            sets: '4', reps: '20', rest: 90, tempo: '2-2-2',
-            v: 'gwLzBJYoWlQ', vs: 'Usa el borde de un escalón o una tabla gruesa. Rango completo.',
-            tip: 'Sin rango completo no hay estímulo. Talón totalmente abajo, punta totalmente arriba. Pausa 2 seg en el tope.',
-            er: []
-          }
+        t: 'TRAPECIO + PANTORRILLAS', s: false, e: [
+          { n: 'Encogimientos con Mochila',      sets: '3', reps: '15', rs: 45, v: 'qEwKCR5JCog', tip: 'Mochila pesada en cada mano. Sube los hombros al máximo. Pausa 1 seg.', er: [] },
+          { n: 'Pantorrillas en Escalón',        sets: '4', reps: '20', rs: 30, v: 'gwLzBJYoWlQ', tip: 'Rango completo: talón abajo del borde, punta al máximo arriba. Pausa 2 seg arriba.', er: [] },
         ]
-      }
+      },
     ]
   }
 },
 
-// ════════════════════════════════════════════════════════════════
-// MIÉRCOLES — UPPER B: Tracción Dominante
-// Espalda ancha y gruesa · Bíceps completo · Deltoides posterior
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════
+// JUEVES — EMPUJE B
+// Pecho plano + declinado · Hombros · Tríceps (variantes)
+// ════════════════════════════════════════════
 {
-  day: 'MIÉ', label: 'UPPER B — TRACCIÓN', rest: false, split: 'upperB',
-  focus: 'Espalda · Bíceps · Deltoides posterior',
-  coachNote: 'La espalda es el músculo que construye el físico atlético. Un pecho grande sin espalda se ve desequilibrado. La espalda ancha crea la ilusión de cintura más delgada. Prioridad: dominadas o jalones con peso correcto y rango completo.',
-
+  day: 'JUE', label: 'PECHO · HOMBROS · TRÍCEPS (B)', rest: false, split: 'pushB',
   gym: {
-    focus: 'Dorsal ancho · Trapecio · Romboides · Bíceps · Rear delt',
-    warmup: '8 min remo en máquina ergómetro a ritmo constante + estiramientos dinámicos de hombro',
+    focus: 'Pecho plano y declinado · Hombros · Tríceps',
     blocks: [
       {
-        t: 'BLOQUE 1 — ANCLA DEL DÍA (prioridad máxima)',
-        s: false,
-        e: [
-          {
-            n: 'Jalón al Pecho (o Dominadas si podés hacer 6+)',
-            muscle: 'Dorsal ancho + Bíceps + Teres mayor',
-            sets: '4', reps: '6–8', rest: 120, tempo: '3-1-1',
-            v: 'CAwf7n6Luuc', vs: 'Inclina 15° el torso. Baja la barra al pecho bajo. Contrae la espalda 1 seg abajo.',
-            tip: 'Si podés hacer más de 6 dominadas: hacé dominadas (son superiores). Si no: jalón con peso que te cueste en las últimas 2 reps. TÉCNICA DEL JALÓN: Agarre ancho, inclina el torso 15° atrás, baja la barra al esternón (no al ombligo), codos apuntan al suelo, contrae la espalda 1 seg al final.',
-            er: [
-              { l: '❌ Error #1', t: 'Barra al ombligo o al abdomen — activa más bíceps que dorsal.' },
-              { l: '❌ Error #2', t: 'Torso que se va muy hacia atrás (más de 30°) — se convierte en remo.' },
-              { l: '❌ Error #3', t: 'No llegar a la extensión completa arriba — el dorsal no se estira.' }
-            ]
-          },
-          {
-            n: 'Remo con Barra (Barbell Row)',
-            muscle: 'Espalda media + Dorsal + Bíceps + Romboides',
-            sets: '4', reps: '6–8', rest: 120, tempo: '3-1-1',
-            v: 'GZbfZ033f74', vs: 'Torso a 45°. Barra toca el abdomen bajo. Codos pegados al cuerpo.',
-            tip: 'El remo con barra construye el grosor de la espalda (el jalón construye el ancho). Torso a 45°, barra toca el abdomen bajo, codos pegados al cuerpo durante todo el movimiento. No uses el impulso del torso — si tenés que hacerlo, el peso está muy alto.',
-            er: [
-              { l: '❌ Error #1', t: 'Torso que sube y baja para generar impulso (cheating). Torso fijo a 45°.' },
-              { l: '❌ Error #2', t: 'Barra que toca el pecho alto — activa más deltoides posterior que espalda.' }
-            ]
-          }
+        t: 'PECHO', s: false, e: [
+          { n: 'Press Banca Inclinado con Barra',     sets: '4', reps: '8–12',  rs: 120, v: '8iPEnn-ltC8', tip: 'Banco 30°. Agarre ligeramente más ancho que los hombros. Barra baja a la parte alta del pecho.', er: [{l:'❌',t:'Banco a más de 45° → activa hombro, no pecho superior'}] },
+          { n: 'Press Banca Plano con Mancuernas',    sets: '4', reps: '10–12', rs: 90,  v: 'rT7DgCr-3pg', tip: 'Mayor rango de movimiento que la barra. Baja hasta sentir el estiramiento completo del pecho.', er: [] },
+          { n: 'Aperturas Planas con Mancuernas',     sets: '4', reps: '12',    rs: 60,  v: 'rT7DgCr-3pg', tip: 'Codos ligeramente doblados. Estiramiento máximo abajo. No uses mucho peso.', er: [{l:'❌',t:'Codos completamente rectos → tensión en el bíceps'}] },
+          { n: 'Press Banca Declinado',               sets: '3', reps: '12',    rs: 75,  v: 'rT7DgCr-3pg', tip: 'Activa el pecho inferior. Declive de 15-30°. Agarre normal. Baja hasta el pecho bajo.', er: [] },
         ]
       },
       {
-        t: 'BLOQUE 2 — ESPALDA ALTA Y POSTERIOR',
-        s: false,
-        e: [
-          {
-            n: 'Remo en Polea Baja (agarre neutro o cerrado)',
-            muscle: 'Romboides + Trapecio medio + Dorsal inferior',
-            sets: '3', reps: '10–12', rest: 75, tempo: '3-2-1',
-            v: 'GZbfZ033f74', vs: 'Codos pegados al cuerpo. Jala al abdomen. Contrae 2 seg. Espalda recta durante todo.',
-            tip: 'El remo en polea permite mayor concentración en la contracción que el remo libre. Codos pegados = más dorsal. Codos hacia afuera = más espalda alta. Hoy los pegamos al cuerpo.',
-            er: [{ l: '❌ Error', t: 'Inclinarse hacia atrás para jalar (inercia). Torso estático durante todo el movimiento.' }]
-          },
-          {
-            n: 'Face Pulls + Reverse Fly combinado',
-            muscle: 'Deltoides posterior + Manguito rotador + Romboides',
-            sets: '3', reps: '15', rest: 60, tempo: '2-2-1',
-            v: 'HSoHeSjvIdY', vs: 'Face pulls con cuerda hacia la nariz. Codos arriba y atrás.',
-            tip: 'El deltoides posterior es el músculo más importante para la salud del hombro y la postura atlética. 3 series de 15 aquí y en el Upper A. Si tu hombro posterior es débil, todos los ejercicios de tracción y empuje sufren.',
-            er: [{ l: '❌ Error', t: 'Codos abajo — convierte el face pull en un remo alto. Codos al nivel de los ojos.' }]
-          }
+        t: 'HOMBROS', s: false, e: [
+          { n: 'Press Arnold con Mancuernas',         sets: '3', reps: '10–12', rs: 75, v: 'qEwKCR5JCog', tip: 'Misma técnica que el lunes. La repetición de este ejercicio 2× semana construye hombros rápido.', er: [] },
+          { n: 'Elevaciones Laterales con Mancuernas', sets: '3', reps: '12–15', rs: 45, v: 'FeJbvGm_09k', tip: 'Variación a la polea del lunes. Sube hasta paralelo. Baja en 2 seg.', er: [] },
+          { n: 'Elevaciones Frontales con Mancuernas', sets: '3', reps: '12',    rs: 45, v: 'FeJbvGm_09k', tip: 'Alterna o simultáneo. Sube hasta paralelo. Trabaja el deltoides anterior.', er: [] },
         ]
       },
       {
-        t: 'BLOQUE 3 — BÍCEPS COMPLETO (cabeza larga + corta + braquial)',
-        s: true,
-        e: [
-          {
-            n: 'Curl con Barra EZ (cabeza larga)',
-            muscle: 'Bíceps braquial cabeza larga + Braquial',
-            sets: '3', reps: '8–10', rest: 0, tempo: '3-0-1',
-            v: 'av7-8igSXTs', vs: 'Codos completamente fijos al cuerpo. Baja en 3 seg hasta extensión completa.',
-            tip: 'El curl estándar con barra EZ (agarre semisupino) activa mejor ambas cabezas del bíceps que la barra recta. Codos FIJOS — si se mueven, el peso está muy alto. La extensión completa abajo es obligatoria para el estiramiento máximo donde el músculo más crece.',
-            er: [{ l: '❌ Error', t: 'No bajar hasta la extensión completa. El bíceps crece principalmente en la posición de estiramiento.' }]
-          },
-          {
-            n: 'Curl Predicador con Mancuerna (cabeza corta)',
-            muscle: 'Bíceps braquial cabeza corta (pico del bíceps)',
-            sets: '3', reps: '10–12', rest: 60, tempo: '3-1-1',
-            v: 'BZFgeQfOCGE', vs: 'Codo sobre el pad. Extensión completa abajo. Contrae 1 seg arriba.',
-            tip: 'El predicador aísla el bíceps eliminando el balanceo del cuerpo. Trabaja principalmente la cabeza corta que forma el pico del bíceps. Baja completamente hasta la extensión total.',
-            er: [{ l: '❌ Error', t: 'Levantar el hombro del pad al subir. El hombro permanece fijo durante todo el movimiento.' }]
-          }
+        t: 'TRÍCEPS', s: false, e: [
+          { n: 'Patadas de Tríceps (Kickback)',        sets: '3', reps: '12–15', rs: 45, v: 'vB5OHsJ3EMc', tip: 'Codo al nivel de la cadera. Extiende completamente el brazo. Contrae 1 seg en el tope.', er: [{l:'❌',t:'Codo que baja durante el movimiento'}] },
+          { n: 'Extensiones en Polea Alta',            sets: '3', reps: '12–15', rs: 45, v: 'vB5OHsJ3EMc', tip: 'Codos pegados al cuerpo. Extiende completamente. Sube hasta 90° máximo.', er: [] },
+          { n: 'Fondos entre Bancos al Fallo',         sets: '3', reps: 'al fallo', rs: 60, v: 'l4kQd9eWclE', tip: 'Pies en banco elevado. Cuerpo vertical. Baja hasta 90°. Al fallo sin compensar con el cuerpo.', er: [] },
         ]
       },
-      {
-        t: 'BRAQUIAL + FINISHER CARDIO',
-        s: false,
-        e: [
-          {
-            n: 'Curl Martillo en Polea (cuerda)',
-            muscle: 'Braquial + Braquiorradial (grosor del brazo)',
-            sets: '3', reps: '12–15', rest: 45, tempo: '2-1-2',
-            v: 'TwD-YGVP4Bk', vs: 'Agarre neutro con cuerda. Polea baja. La tensión constante es la ventaja del cable.',
-            tip: 'El braquial está DEBAJO del bíceps. Si lo desarrollás, empuja el bíceps hacia arriba haciéndolo ver más grande. El agarre neutro (hammer) lo activa más que el supino. La cuerda en polea da tensión constante en todo el rango.',
-            er: []
-          },
-          {
-            n: 'HIIT en Elíptica o Bicicleta',
-            muscle: 'Cardiovascular + quema calórica',
-            sets: '1', reps: '20 min', rest: 0,
-            v: 'xSoHPV-GSXM', vs: '30 seg intenso al 85% + 90 seg suave. 8 ciclos.',
-            tip: 'Mismo protocolo que el lunes. La consistencia del cardio post-entrenamiento es lo que acelera la pérdida de grasa durante la fase de recomposición.',
-            er: []
-          }
-        ]
-      }
     ]
   },
-
   casa: {
-    focus: 'Espalda · Bíceps · Postura atlética · Con mochila',
-    warmup: '5 min de rotaciones de columna y hombro + gatos y perros',
+    focus: 'Pecho · Hombros · Tríceps (variantes en casa)',
     blocks: [
       {
-        t: 'TRACCIÓN DOMINANTE EN CASA',
-        s: false,
-        e: [
-          {
-            n: 'Dominadas (si tenés barra) o Inverted Row en mesa',
-            muscle: 'Dorsal + Bíceps + Espalda alta',
-            sets: '4', reps: 'máx (o 10–12 inverted)', rest: 90, tempo: '3-1-1',
-            v: 'eGo4IYlbE5g', vs: 'Rango completo. Pecho al bar en dominadas. Pecho a la mesa en inverted.',
-            tip: 'Si podés hacer dominadas: son el mejor ejercicio de espalda sin equipamiento. Si no: el inverted row bajo una mesa firme es excelente. Acostado boca arriba, agarrá el borde de la mesa y jalá el pecho hacia el borde.',
-            er: [{ l: '❌ Error', t: 'No llegar a la extensión completa abajo. El estiramiento completo del dorsal es fundamental.' }]
-          },
-          {
-            n: 'Remo con Mochila (bilateral o unilateral)',
-            muscle: 'Espalda media + Romboides + Bíceps',
-            sets: '4', reps: '10–12 por lado', rest: 75, tempo: '3-2-1',
-            v: 'roCP6wCXPqo', vs: 'Mochila con libros. Codo al techo. Contrae la espalda 2 seg en el tope.',
-            tip: 'Llenás una mochila con libros o botellas de agua llenas. El movimiento es idéntico al remo con mancuerna del gym. Apoyá la mano libre en una mesa o silla.',
-            er: []
-          }
+        t: 'PECHO', s: false, e: [
+          { n: 'Flexiones Explosivas (clapping)',       sets: '4', reps: '8',      rs: 90, v: 'IODxDxX7oi4', tip: 'Explosión total al subir. Si no podés palmear: flexiones normales lo más rápido posible.', er: [] },
+          { n: 'Flexiones Diamante',                   sets: '4', reps: '10–15',  rs: 75, v: 'IODxDxX7oi4', tip: 'Manos formando diamante bajo el pecho. Activa el pecho interno y el tríceps.', er: [] },
+          { n: 'Flexiones Declinadas (pies arriba)',    sets: '3', reps: '12',     rs: 60, v: 'IODxDxX7oi4', tip: 'Pies en silla. El ángulo activa el pecho superior. Cuerpo recto durante todo.', er: [] },
         ]
       },
       {
-        t: 'BÍCEPS + FINISHER',
-        s: false,
-        e: [
-          {
-            n: 'Curl con Mochila (supino) + Curl Inverso (pronado)',
-            muscle: 'Bíceps completo + Braquiorradial',
-            sets: '3', reps: '12 supino + 12 pronado', rest: 60, tempo: '3-0-1',
-            v: 'av7-8igSXTs', vs: 'Primero 12 reps agarre normal (palmas arriba), luego sin descanso 12 agarre invertido (palmas abajo).',
-            tip: 'Dos variantes del curl con la misma mochila: supino activa el bíceps, pronado activa el braquiorradial. Un ejercicio que hace el trabajo de dos.',
-            er: []
-          },
-          {
-            n: 'Circuito Finisher Metabólico',
-            muscle: 'Cardiovascular + Full body',
-            sets: '4', reps: '12 burpees + 45 seg MC', rest: 75, tempo: '',
-            v: 'dZgVxmf6jkA', vs: '12 burpees → sin pausa → 45 seg mountain climbers. 75 seg descanso. 4 vueltas.',
-            tip: 'La consistencia de este finisher diario es lo que hace la diferencia en la recomposición corporal. No te lo saltés.',
-            er: []
-          }
+        t: 'HOMBROS + TRÍCEPS', s: false, e: [
+          { n: 'Pike Push-ups + Elevaciones con Botellas', sets: '4', reps: '8 + 20', rs: 75, v: 'sposDXWEB0A', tip: 'Superset: 8 pike push-ups directo a 20 elevaciones laterales. Sin descanso entre los dos.', er: [] },
+          { n: 'Dips en Silla al Fallo',                   sets: '3', reps: 'al fallo', rs: 75, v: 'l4kQd9eWclE', tip: 'Cuerpo vertical para tríceps. Al fallo controlado. No bounces abajo.', er: [] },
         ]
-      }
+      },
     ]
   }
 },
 
-// ════════════════════════════════════════════════════════════════
-// JUEVES — LOWER B: Isquio/Glúteo Dominante
-// Peso muerto · Isquiotibiales · Glúteos · Aductores · Core
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════
+// VIERNES — TRACCIÓN B
+// Espalda · Bíceps (variantes con más volumen)
+// ════════════════════════════════════════════
 {
-  day: 'JUE', label: 'LOWER B — CADENA POSTERIOR', rest: false, split: 'lowerB',
-  focus: 'Isquiotibiales · Glúteos · Core · Peso muerto',
-  coachNote: 'La cadena posterior (isquios, glúteos, espalda baja) es lo que define un atleta. No solo estéticamente — la cadena posterior fuerte previene el 80% de las lesiones deportivas. El peso muerto es el rey absoluto de la fuerza.',
-
+  day: 'VIE', label: 'ESPALDA · BÍCEPS (B)', rest: false, split: 'pullB',
   gym: {
-    focus: 'Peso muerto · Isquiotibiales · Glúteos · Core profundo',
-    warmup: '10 min bicicleta + peso muerto rumano con barra vacía × 15 + activación de glúteo',
+    focus: 'Dorsal ancho · Espalda media · Bíceps volumen',
     blocks: [
       {
-        t: 'BLOQUE 1 — EL EJERCICIO MÁS IMPORTANTE DE TU VIDA',
-        s: false,
-        e: [
-          {
-            n: 'Peso Muerto Convencional (Deadlift)',
-            muscle: 'Isquiotibiales + Glúteos + Espalda baja + Trapecios + Antebrazo (grip)',
-            sets: '4', reps: '5–6', rest: 180, tempo: '3-0-1',
-            v: 'op9kVnSso6Q', vs: 'Barra sobre los cordones. Espalda neutra. Empuja el suelo, no jales la barra.',
-            tip: 'TÉCNICA EXACTA: Párate con la barra sobre los cordones de las zapatillas. Agachate hasta que las espinillas toquen la barra. Espalda NEUTRA (no arqueada ni redondeada). Aprieta la barra como si quisieras doblarla. Empuja el suelo con los pies hacia abajo (no jales la barra hacia arriba). La barra sube pegada a las piernas todo el tiempo. Al llegar arriba: bloquea cadera y rodillas al mismo tiempo.',
-            progression: 'Semanas 1-4: aprende la técnica con poco peso. Errores en peso muerto = lesiones graves.',
-            er: [
-              { l: '❌ Error #1 CRÍTICO', t: 'Espalda redondeada con carga pesada — riesgo real de hernia de disco.' },
-              { l: '❌ Error #2', t: 'Barra que se separa del cuerpo al subir — genera palanca y estrés lumbar.' },
-              { l: '❌ Error #3', t: 'Mirar hacia arriba extremadamente — la columna cervical se comprime.' }
-            ]
-          }
+        t: 'ESPALDA', s: false, e: [
+          { n: 'Dominadas al Fallo',              sets: '4', reps: 'al fallo', rs: 180, v: 'eGo4IYlbE5g', tip: 'Segunda sesión de dominadas de la semana. Si mejorás aunque sea 1 rep: progresión exitosa.', er: [] },
+          { n: 'Jalón al Pecho (agarre neutro)',  sets: '4', reps: '10–12',    rs: 75,  v: 'CAwf7n6Luuc', tip: 'Agarre neutro (palmas enfrentadas). Reduce tensión en muñecas. Baja al pecho. Contrae 1 seg.', er: [{l:'❌',t:'Torso que va muy hacia atrás > 15°'}] },
+          { n: 'Remo con Mancuerna',              sets: '4', reps: '10–12 × lado', rs: 75, v: 'roCP6wCXPqo', tip: 'Codo hacia el techo. Contrae la espalda en el tope. No rotas el torso.', er: [{l:'❌',t:'Rotar el torso al jalar'}] },
+          { n: 'Pullover en Cable',               sets: '3', reps: '12–15',    rs: 60,  v: 'FK4jEXqJHZA', tip: 'Polea alta. Brazos casi rectos. Jala hacia abajo activando el dorsal. Tensión constante.', er: [] },
         ]
       },
       {
-        t: 'BLOQUE 2 — ISQUIOTIBIALES COMPLETOS',
-        s: false,
-        e: [
-          {
-            n: 'Peso Muerto Rumano (RDL) con Mancuernas',
-            muscle: 'Isquiotibiales (estiramiento máximo) + Glúteo mayor',
-            sets: '4', reps: '10–12', rest: 90, tempo: '3-1-1',
-            v: 'op9kVnSso6Q', vs: 'Bisagra de cadera. Mancuernas bajan por las piernas. Sentís el estiramiento del isquio.',
-            tip: 'El RDL es diferente al peso muerto — es un ejercicio de ESTIRAMIENTO del isquiotibial, no de fuerza pura. La clave es sentir el jalón en los isquios al bajar. Rodillas ligeramente dobladas y fijas. Baja hasta que sientas el estiramiento máximo (no hasta el suelo).',
-            er: [
-              { l: '❌ Error #1', t: 'Doblar demasiado las rodillas — se convierte en sentadilla, no en bisagra.' },
-              { l: '❌ Error #2', t: 'Redondear la espalda baja al bajar — espalda neutra siempre.' }
-            ]
-          },
-          {
-            n: 'Curl de Isquiotibiales en Máquina (lying leg curl)',
-            muscle: 'Isquiotibiales (contracción activa — completa el trabajo del RDL)',
-            sets: '3', reps: '12–15', rest: 75, tempo: '2-2-3',
-            v: 'Orxowest56U', vs: 'Baja en 3 seg. Extensión completa. Sube explosivo. El músculo crece bajando.',
-            tip: 'El RDL trabaja el isquio desde el estiramiento. El curl de máquina lo trabaja desde la contracción. Juntos = estimulación completa del isquio. La bajada en 3 seg es donde más se desarrolla el músculo.',
-            er: [
-              { l: '❌ Error #1', t: 'Levantar las caderas al jalar — rompe el aislamiento.' },
-              { l: '❌ Error #2', t: 'No llegar a la extensión completa. Rango completo siempre.' }
-            ]
-          }
+        t: 'BÍCEPS', s: false, e: [
+          { n: 'Curl con Barra (de pie)',          sets: '3', reps: '8–10',  rs: 90,  v: 'av7-8igSXTs', tip: 'Codos fijos al cuerpo. Rango completo. Baja en 3 seg. No uses impulso del torso.', er: [{l:'❌',t:'Balancear el cuerpo para subir el peso'}] },
+          { n: 'Curl Predicador con Mancuerna',   sets: '3', reps: '10–12', rs: 60,  v: 'BZFgeQfOCGE', tip: 'Codo en el pad elimina el balanceo. Baja completamente. Contrae 1 seg arriba.', er: [] },
+          { n: 'Curl Martillo en Polea (cuerda)', sets: '3', reps: '12–15', rs: 45,  v: 'TwD-YGVP4Bk', tip: 'Polea baja con cuerda. Agarre neutro. La polea da tensión constante todo el rango.', er: [] },
         ]
       },
-      {
-        t: 'BLOQUE 3 — GLÚTEO POSTERIOR Y CORE ATLÉTICO',
-        s: false,
-        e: [
-          {
-            n: 'Sentadilla Búlgara con Mancuernas',
-            muscle: 'Glúteos + Cuádriceps (énfasis glúteo si el torso va hacia adelante)',
-            sets: '3', reps: '8–10 por pierna', rest: 90, tempo: '3-1-1',
-            v: 'QOVaHwm-Q6U', vs: 'Pie trasero en banco. Baja verticalmente. Para más glúteo: inclina el torso ligeramente al frente.',
-            tip: 'La sentadilla búlgara es uno de los ejercicios unilaterales más completos. Para enfatizar el glúteo: inclina el torso levemente al frente al bajar. Para enfatizar el cuádricep: mantén el torso vertical.',
-            er: []
-          },
-          {
-            n: 'Plancha con Variaciones (RKC o dinámica)',
-            muscle: 'Core profundo: transverso abdominal + multífidos + glúteos',
-            sets: '3', reps: '45 seg', rest: 60, tempo: '',
-            v: 'ASdvN_XEl_c', vs: 'RKC plank: aprieta TODO al mismo tiempo. Glúteos, abdomen, cuádriceps, manos.',
-            tip: 'La plancha RKC es 2-3x más difícil que la plancha normal. Técnica: posición de plancha estándar, luego aprieta SIMULTÁNEAMENTE los glúteos al máximo, el abdomen como si fueras a recibir un golpe, los cuádriceps y las manos como si quisieras apretar el suelo. 45 seg de esto equivale a minutos de plancha normal.',
-            er: [{ l: '❌ Error', t: 'Plancha pasiva (solo aguantar). La plancha atlética requiere contracción activa máxima.' }]
-          }
-        ]
-      },
-      {
-        t: 'FINISHER + CARDIO',
-        s: false,
-        e: [
-          {
-            n: 'Abducción de Cadera (máquina) + Caminadora Inclinada',
-            muscle: 'Glúteo medio + Cardiovascular',
-            sets: '1', reps: '3×20 abducción + 20 min caminadora', rest: 0,
-            v: 'xSoHPV-GSXM', vs: '3 series de 20 reps de abducción, luego 20 min caminadora al 10-12%.',
-            tip: 'El glúteo medio (lateral) define la forma del glúteo y la estabilidad de rodilla. 3 series rápidas y al finisher de caminadora.',
-            er: []
-          }
-        ]
-      }
     ]
   },
-
   casa: {
-    focus: 'Cadena posterior · Isquios · Glúteos · Core',
-    warmup: '5 min trote + activación de glúteo en cuadrupedia × 15 por lado',
+    focus: 'Espalda · Bíceps (variantes con mochila)',
     blocks: [
       {
-        t: 'CADENA POSTERIOR EN CASA',
-        s: false,
-        e: [
-          {
-            n: 'Nordic Curl (pies bajo sofá o con compañero)',
-            muscle: 'Isquiotibiales excéntrico (el más efectivo sin máquina)',
-            sets: '4', reps: '5–8', rest: 120, tempo: 'excéntrico lento',
-            v: '0Njz2FBOJIE', vs: 'Mete los pies bajo el sofá. Baja lentísimo frenando con los isquios. Usa las manos para subir.',
-            tip: 'El nordic curl es el ejercicio de isquiotibiales más efectivo sin equipamiento. Científicamente probado. El trabajo excéntrico (frenado) es donde más crece el músculo. Baja lo más lento posible — 5-10 seg bajando. Usá las manos para el regreso.',
-            er: [{ l: '❌ Error', t: 'Bajar rápido sin control. El beneficio está en el frenado lento.' }]
-          },
-          {
-            n: 'Hip Thrust Elevado (hombros en sofá) + Pausa',
-            muscle: 'Glúteo mayor (máxima activación posible en casa)',
-            sets: '4', reps: '15', rest: 90, tempo: '2-3-1',
-            v: 'SEdqd1n0cvg', vs: 'Hombros en el borde del sofá. Talones en el suelo. Pausa 3 seg arriba.',
-            tip: 'Con los hombros elevados el rango de movimiento aumenta significativamente vs el glute bridge en el suelo. La pausa de 3 seg elimina cualquier inercia y fuerza al glúteo a sostener la contracción.',
-            er: []
-          }
+        t: 'ESPALDA', s: false, e: [
+          { n: 'Dominadas con Pausa (o Inverted Row)', sets: '4', reps: 'máx con pausa 1 seg arriba', rs: 120, v: 'eGo4IYlbE5g', tip: 'La pausa de 1 seg en el tope multiplica el estímulo aunque hagas menos reps.', er: [] },
+          { n: 'Remo con Mochila (bilateral, sobre silla)', sets: '4', reps: '12', rs: 75, v: 'roCP6wCXPqo', tip: 'Mochila pesada. Torso a 45°. Jala al abdomen. No uses inercia del torso.', er: [] },
         ]
       },
       {
-        t: 'CORE ATLÉTICO (no abdominales tradicionales)',
-        s: false,
-        e: [
-          {
-            n: 'Dead Bug',
-            muscle: 'Transverso abdominal + Estabilización lumbo-pélvica',
-            sets: '3', reps: '10 por lado', rest: 60, tempo: '4-0-4',
-            v: 'g_BYB0R-4Ws', vs: 'Espalda PEGADA al suelo. Extiende brazo y pierna contrarios LENTAMENTE. Sin arquear.',
-            tip: 'El dead bug entrena el core de la forma en que se usa en el deporte y la vida real: estabilizando la columna mientras las extremidades se mueven. La espalda baja debe estar completamente pegada al suelo durante todo el ejercicio.',
-            er: [{ l: '❌ Error', t: 'La espalda baja se arquea al extender las extremidades. Si pasa: reducí el rango.' }]
-          },
-          {
-            n: 'Hollow Body Hold',
-            muscle: 'Core completo (el ejercicio de core de los gimnastas)',
-            sets: '3', reps: '30 seg', rest: 60, tempo: '',
-            v: 'ASdvN_XEl_c', vs: 'Boca arriba. Espalda pegada al suelo. Brazos y piernas extendidos y elevados.',
-            tip: 'El hollow body es la posición base de todos los atletas y gimnastas. Boca arriba, presiona la espalda baja contra el suelo y eleva brazos y piernas. Cuanto más cerca del suelo las piernas, más difícil. Empezá con 30 seg y progresá.',
-            er: []
-          }
+        t: 'BÍCEPS', s: false, e: [
+          { n: 'Curl con Mochila (supino) — 21s', sets: '3', reps: '21 (7+7+7)', rs: 90, v: 'av7-8igSXTs', tip: '7 reps mitad inferior + 7 reps mitad superior + 7 reps rango completo. Sin descanso entre los 21.', er: [] },
+          { n: 'Curl Inverso con Botella',         sets: '3', reps: '15–20',       rs: 45, v: 'TwD-YGVP4Bk', tip: 'Agarre invertido (dorso arriba). Trabaja el braquiorradial. Codos fijos al cuerpo.', er: [] },
         ]
-      }
+      },
     ]
   }
 },
 
-// ════════════════════════════════════════════════════════════════
-// VIERNES — FULL BODY POTENCIA
-// Compuestos pesados + Cardio HIIT + Funcionalidad atlética
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════
+// SÁBADO — PIERNA B + CORE
+// Peso muerto · Isquios · Glúteos · Core intenso
+// ════════════════════════════════════════════
 {
-  day: 'VIE', label: 'FULL BODY — POTENCIA', rest: false, split: 'fullbody',
-  focus: 'Fuerza explosiva · Full body · HIIT · Funcional',
-  coachNote: 'El viernes es el día más atlético de la semana. Combinamos los patrones de movimiento fundamentales (empuje, tracción, bisagra, sentadilla) en una sesión de alta intensidad. No es un día de aislamiento — es un día de ATLETA.',
-
+  day: 'SÁB', label: 'PIERNAS · CORE', rest: false, split: 'legB',
   gym: {
-    focus: 'Potencia · Compuestos · HIIT integrado',
-    warmup: '5 min jump rope (o simulado) + movilidad dinámica completa',
+    focus: 'Isquiotibiales · Glúteos · Cuádriceps · Core',
     blocks: [
       {
-        t: 'BLOQUE POTENCIA — Compuestos principales (mínimo descanso)',
-        s: false,
-        e: [
-          {
-            n: 'Peso Muerto + Remo Pendlay (complejo de barra)',
-            muscle: 'Full posterior chain + Espalda + Core',
-            sets: '4', reps: '5 peso muerto + 5 remo pendlay', rest: 120, tempo: '',
-            v: 'op9kVnSso6Q', vs: '5 reps de peso muerto, sin soltar la barra, inclina y haz 5 remos Pendlay. Eso es 1 serie.',
-            tip: 'El complejo de barra: sin soltar la barra, encadenás 5 peso muertos + 5 remos Pendlay. Esto entrena la transición atlética entre patrones de movimiento y genera una respuesta hormonal masiva. Usa el 60-70% de tu máximo en peso muerto.',
-            er: [{ l: '❌ Error', t: 'Peso muy alto que compromete la técnica del remo Pendlay. Bajá el peso.' }]
-          },
-          {
-            n: 'Press de Banca + Dominadas (superset antagonista)',
-            muscle: 'Pecho + Espalda (músculos antagonistas — se recuperan mutuamente)',
-            sets: '4', reps: '6 press + 6 dominadas (o jalón)', rest: 90, tempo: '3-0-1',
-            v: 'rT7DgCr-3pg', vs: '6 reps de press de banca, descansás 20 seg, 6 reps de dominadas. Eso es 1 serie.',
-            tip: 'El superset antagonista (pecho + espalda) permite descansar uno mientras trabajás el otro, aumentando la densidad del entrenamiento sin perder fuerza. El pecho se recupera mientras hacés las dominadas y viceversa.',
-            er: []
-          },
-          {
-            n: 'Sentadilla Frontal (o Goblet Squat con mancuerna)',
-            muscle: 'Cuádriceps + Core + Estabilidad atlética',
-            sets: '3', reps: '8', rest: 90, tempo: '3-1-1',
-            v: 'ultWZbUMPL8', vs: 'Sentadilla con barra en posición frontal (o mancuerna al pecho). Más vertical que la sentadilla normal.',
-            tip: 'La sentadilla frontal requiere más postura erecta y activación del core que la sentadilla de espalda — más atlética y funcional. Si no tenés movilidad para la barra frontal: usa el goblet squat con una mancuerna pesada al pecho.',
-            er: [{ l: '❌ Error', t: 'Codos que caen — la barra se va hacia adelante y el torso se inclina.' }]
-          }
+        t: 'PIERNA', s: false, e: [
+          { n: 'Peso Muerto Rumano (RDL)',         sets: '4', reps: '10–12', rs: 90,  v: 'op9kVnSso6Q', tip: 'Bisagra de cadera. Baja hasta sentir el jalón en los isquios. Rodillas ligeramente dobladas y fijas.', er: [{l:'❌',t:'Redondear la espalda baja'},{l:'❌',t:'Doblar demasiado las rodillas → se convierte en sentadilla'}] },
+          { n: 'Curl de Isquiotibiales (máquina)', sets: '4', reps: '10–12', rs: 75,  v: 'Orxowest56U', tip: 'Baja en 3 seg. El músculo crece más bajando. Extensión completa. Sube explosivo.', er: [{l:'❌',t:'Levantar las caderas al jalar'}] },
+          { n: 'Sentadilla Búlgara con Mancuernas', sets: '3', reps: '10 × pierna', rs: 90, v: 'QOVaHwm-Q6U', tip: 'Pie trasero en banco. Para énfasis en glúteo: inclina el torso ligeramente al frente.', er: [] },
+          { n: 'Extensión de Cuádriceps (máquina)', sets: '3', reps: '15',   rs: 60,  v: '4ZDm5EbBAQY', tip: 'Pausa 2 seg en la extensión completa. Baja en 2 seg. Peso moderado, énfasis en la contracción.', er: [] },
         ]
       },
       {
-        t: 'CIRCUITO ATLÉTICO (3 vueltas, 60 seg descanso entre vueltas)',
-        s: false,
-        e: [
-          {
-            n: 'Kettlebell Swing (o Mancuerna)',
-            muscle: 'Glúteos + Isquios + Core + Cardiovascular (el más atlético)',
-            sets: '3', reps: '20', rest: 0, tempo: '',
-            v: 'YSxHifyI6s8', vs: 'Bisagra de cadera explosiva. La potencia viene de la cadera, no de los brazos.',
-            tip: 'El swing de kettlebell replica el patrón atlético de cualquier deporte: extensión explosiva de cadera. No es una sentadilla — es una bisagra. El swing entrena potencia, resistencia, y quema una cantidad masiva de calorías.',
-            er: [{ l: '❌ Error', t: 'Sentadilla en vez de bisagra — los brazos llevan el peso en lugar de la cadera.' }]
-          },
-          {
-            n: 'Box Jump o Salto al Cajón (o salto vertical)',
-            muscle: 'Potencia explosiva de pierna + Sistema nervioso',
-            sets: '3', reps: '8', rest: 0, tempo: '',
-            v: 'CVaEhXotL7M', vs: 'Máxima explosión. Aterriza suave en el cajón. Baja controlado.',
-            tip: 'Los saltos entrenan el sistema neuromuscular para generar fuerza rápidamente — eso es lo que diferencia a un atleta de alguien que solo levanta pesas. 8 reps de máxima calidad, no de fatiga.',
-            er: [{ l: '❌ Error', t: 'Saltar muchas reps seguidas sin recuperación — los saltos requieren calidad, no cantidad.' }]
-          },
-          {
-            n: 'Remo en Máquina Ergómetro (sprint)',
-            muscle: 'Full body metabólico + Cardiovascular',
-            sets: '3', reps: '250m lo más rápido posible', rest: 60, tempo: '',
-            v: 'H0r_ZdAcOKE', vs: '250 metros al sprint. Descansás 60 seg. 3 series.',
-            tip: 'El remo al sprint activa prácticamente todos los músculos del cuerpo simultáneamente. 250m a máxima intensidad genera un estímulo cardiovascular masivo.',
-            er: []
-          }
+        t: 'GLÚTEOS + PANTORRILLAS', s: false, e: [
+          { n: 'Abducción de Cadera (máquina)',    sets: '3', reps: '20',    rs: 45, v: 'EsFQT0LBiIQ', tip: 'Glúteo medio. Abre contra la resistencia. Contrae en el tope. Peso moderado, volumen alto.', er: [] },
+          { n: 'Pantorrillas Sentado (sóleo)',     sets: '4', reps: '15–20', rs: 30, v: 'gwLzBJYoWlQ', tip: 'Activa el sóleo (músculo profundo). Rango completo obligatorio. Pausa 2 seg arriba.', er: [] },
         ]
       },
       {
-        t: 'CORE PESADO',
-        s: false,
-        e: [
-          {
-            n: 'Rueda Abdominal (Ab Wheel) desde rodillas',
-            muscle: 'Core completo + Dorsal + Hombros estabilizadores',
-            sets: '4', reps: '8–10', rest: 60, tempo: '3-0-1',
-            v: 'AhGCpbPf77U', vs: 'Desde rodillas. Extiende sin arquear la espalda baja. Vuelve contrayendo el abdomen.',
-            tip: 'La rueda abdominal es el ejercicio de core más difícil y efectivo. Desde rodillas primero. Extiende hasta donde puedas SIN que la espalda baja se arquee. Vuelve contrayendo el abdomen, no jalando con los hombros.',
-            er: [{ l: '❌ Error', t: 'Espalda baja que se arquea al extender — reduce el rango de movimiento.' }]
-          },
-          {
-            n: 'Farmer\'s Walk (caminata con mancuernas pesadas)',
-            muscle: 'Core estabilizador + Agarre + Trapecios + Resistencia',
-            sets: '3', reps: '30 metros (o 30 seg)', rest: 60, tempo: '',
-            v: '',
-            tip: 'El ejercicio más subestimado del gimnasio. Agarrás las mancuernas más pesadas que puedas sostener y caminás derecho. Activa el core de manera funcional, fortalece el agarre, los trapecios y la resistencia total.',
-            er: [{ l: '💡', t: 'Espalda recta, hombros hacia atrás y abajo, camina con pasos controlados.' }]
-          }
+        t: 'CORE', s: false, e: [
+          { n: 'Rueda Abdominal (Ab Wheel)',       sets: '4', reps: '8–12',  rs: 60, v: 'AhGCpbPf77U', tip: 'Desde rodillas. Extiende sin arquear la espalda baja. Vuelve contrayendo el abdomen.', er: [{l:'❌',t:'Espalda baja que se arquea al extender'}] },
+          { n: 'Knee Raises Colgado en Barra',    sets: '3', reps: '12–15', rs: 60, v: 'hdng3gmd4e0', tip: 'Rota la pelvis al subir. Sin esa rotación solo trabajás los flexores de cadera.', er: [{l:'❌',t:'Balancearse — controlá la bajada'}] },
+          { n: 'Plancha (RKC)',                   sets: '3', reps: '45 seg', rs: 45, v: 'ASdvN_XEl_c', tip: 'Aprieta simultáneamente: glúteos al máximo + abdomen + cuádriceps. Es más difícil que la plancha normal.', er: [] },
         ]
-      }
+      },
     ]
   },
-
   casa: {
-    focus: 'Potencia · Circuito atlético · Sin equipamiento',
-    warmup: '3 min saltar lazo (o simulado) + movilidad dinámica',
+    focus: 'Cadena posterior · Core · Sin equipamiento',
     blocks: [
       {
-        t: 'CIRCUITO ATLÉTICO FULL BODY (5 vueltas, 90 seg descanso)',
-        s: false,
-        e: [
-          {
-            n: 'Burpees con Salto Explosivo',
-            muscle: 'Full body + Cardiovascular + Potencia',
-            sets: '5', reps: '10', rest: 0, tempo: '',
-            v: 'dZgVxmf6jkA', vs: 'Plancha → flexión → salto vertical máximo. La altura del salto es el indicador de intensidad.',
-            tip: 'El burpee es el equivalente en casa al complejo de barra del gym. Trabaja todo el cuerpo en un movimiento. La flexión es obligatoria — sin ella pierde la mitad del beneficio.',
-            er: []
-          },
-          {
-            n: 'Sentadilla con Salto + Zancada en Reversa (alternado)',
-            muscle: 'Cuádriceps + Glúteos + Potencia de pierna',
-            sets: '5', reps: '8 saltos + 8 zancadas', rest: 0, tempo: '',
-            v: 'CVaEhXotL7M', vs: '8 sentadillas con salto, sin pausa, 8 zancadas en reversa alternando piernas.',
-            tip: 'La combinación de ejercicio bilateral (sentadilla) + unilateral (zancada) en la misma serie es una estrategia atlética avanzada que maximiza el reclutamiento muscular.',
-            er: []
-          },
-          {
-            n: 'Flexiones Explosivas (clapping push-ups o normales rápidas)',
-            muscle: 'Pecho + Tríceps + Potencia de empuje',
-            sets: '5', reps: '8', rest: 0, tempo: '',
-            v: 'IODxDxX7oi4', vs: 'Explosión total al subir. Si podés: palmada al aire. Si no: flexiones lo más explosivas posible.',
-            tip: 'Las flexiones explosivas entrenan el pecho y el tríceps para generar fuerza rápidamente — el componente de potencia que completa el físico atlético.',
-            er: []
-          },
-          {
-            n: 'Mountain Climbers + Plancha RKC',
-            muscle: 'Core + Cardiovascular',
-            sets: '5', reps: '30 seg MC + 20 seg plancha RKC', rest: 90, tempo: '',
-            v: 'nmwgirgXLYM', vs: '30 seg mountain climbers a máxima velocidad, sin pausa, 20 seg plancha apretando todo.',
-            tip: 'El cierre de cada vuelta. Los mountain climbers elevan el ritmo cardíaco, la plancha RKC lo mantiene con estímulo de core. Combinación brutal.',
-            er: []
-          }
+        t: 'ISQUIOS + GLÚTEOS', s: false, e: [
+          { n: 'Nordic Curl (pies bajo sofá)',       sets: '4', reps: '6–8',           rs: 120, v: '0Njz2FBOJIE', tip: 'El ejercicio más efectivo de isquios sin máquina. Baja LENTO (5-10 seg). Usa manos para subir.', er: [{l:'❌',t:'Bajar rápido sin control — el beneficio está en el frenado'}] },
+          { n: 'Hip Thrust Elevado con Pausa',      sets: '4', reps: '15',            rs: 75,  v: 'SEdqd1n0cvg', tip: 'Hombros en el sofá. Pausa 3 seg arriba. Sin pausa es solo movimiento, con pausa es trabajo real.', er: [] },
+          { n: 'Sentadilla Búlgara',                sets: '3', reps: '10 × pierna',   rs: 75,  v: 'QOVaHwm-Q6U', tip: 'Pie trasero en silla. Bajada en 3 seg. Si es fácil: usa mochila como contrapeso.', er: [] },
         ]
-      }
+      },
+      {
+        t: 'CORE', s: false, e: [
+          { n: 'Dead Bug',                          sets: '3', reps: '10 × lado',     rs: 60, v: 'g_BYB0R-4Ws', tip: 'Espalda PEGADA al suelo durante todo el movimiento. Si se arquea: reduce el rango.', er: [] },
+          { n: 'Hollow Body Hold',                  sets: '3', reps: '30 seg',        rs: 45, v: 'ASdvN_XEl_c', tip: 'Espalda pegada al suelo. Brazos y piernas elevados. Cuanto más bajo las piernas, más difícil.', er: [] },
+          { n: 'Russian Twists con Botella',        sets: '3', reps: '30',            rs: 45, v: 'wkD8rjkodUI', tip: 'Pies elevados del suelo. Torso a 45°. Toca el suelo alternando lados. Usa botella llena.', er: [] },
+          { n: 'Plancha RKC',                       sets: '3', reps: '40 seg',        rs: 45, v: 'ASdvN_XEl_c', tip: 'Aprieta glúteos + abdomen + cuádriceps MÁXIMO. 40 seg de esto = 2 min de plancha normal.', er: [] },
+        ]
+      },
     ]
   }
 },
 
-// ════════════════════════════════════════════════════════════════
-// SÁBADO — UPPER ESPECIALIZACIÓN
-// Hombros completo + Brazos + Core + Postura atlética
-// ════════════════════════════════════════════════════════════════
-{
-  day: 'SÁB', label: 'UPPER — HOMBROS Y BRAZOS', rest: false, split: 'upperC',
-  focus: 'Hombros completo · Bíceps · Tríceps · Core intenso',
-  coachNote: 'El sábado es el día de especialización estética atlética. Los hombros anchos, brazos desarrollados y core fuerte son los marcadores visuales del físico atlético. No es un día de cargas máximas — es un día de volumen y conexión mente-músculo.',
-
-  gym: {
-    focus: 'Deltoides 360° · Bíceps volumen · Tríceps largo · Core',
-    warmup: '8 min bicicleta + rotaciones de hombro + banda de resistencia lateral raises × 20',
-    blocks: [
-      {
-        t: 'HOMBROS — DESARROLLO 360° (el músculo que define el físico atlético)',
-        s: false,
-        e: [
-          {
-            n: 'Press Arnold con Mancuernas (sentado)',
-            muscle: 'Deltoides anterior + medial + posterior (las 3 cabezas)',
-            sets: '4', reps: '10–12', rest: 75, tempo: '3-1-1',
-            v: 'qEwKCR5JCog', vs: 'Empieza palmas hacia vos. Gira al subir. Termina palmas al frente.',
-            tip: 'El press Arnold es superior al press militar estándar porque la rotación de muñeca activa las 3 cabezas del deltoides en lugar de solo la anterior. Sentado para eliminar el impulso. La rotación de muñeca es la clave del movimiento.',
-            er: [{ l: '❌ Error', t: 'No completar la rotación de muñeca — pierde la ventaja del Arnold sobre el press normal.' }]
-          },
-          {
-            n: 'Superset: Elevaciones Laterales + Elevaciones Frontales',
-            muscle: 'Deltoides medial (lateral) + Deltoides anterior (frontal)',
-            sets: '4', reps: '12 lateral + 12 frontal', rest: 60, tempo: '2-1-2',
-            v: 'FeJbvGm_09k', vs: '12 elevaciones laterales directo a 12 elevaciones frontales. Sin descanso entre los dos.',
-            tip: 'El superset lateral + frontal trabaja ambas cabezas del deltoides con el mismo peso sin descanso. El deltoides medial (lateral) crea el ancho; el anterior (frontal) la proyección hacia adelante. Juntos = hombros redondos y atléticos.',
-            er: []
-          },
-          {
-            n: 'Reverse Fly con Mancuernas (inclinado)',
-            muscle: 'Deltoides posterior + Romboides + Trapecio medio',
-            sets: '4', reps: '15–20', rest: 45, tempo: '2-2-1',
-            v: 'HSoHeSjvIdY', vs: 'Torso paralelo al suelo (banco inclinado o de pie inclinado). Abre los brazos hacia los lados.',
-            tip: 'El deltoides posterior completa el hombro redondo 360°. Sin él, los hombros se ven planos desde atrás. Incliná el torso hasta casi paralelo al suelo para el máximo aislamiento del deltoides posterior.',
-            er: [{ l: '❌ Error', t: 'Torso muy vertical — activa más trapecio que deltoides posterior.' }]
-          },
-          {
-            n: 'Face Pulls (cierre de hombros)',
-            muscle: 'Manguito rotador + Deltoides posterior + Salud articular',
-            sets: '3', reps: '20', rest: 45, tempo: '2-2-1',
-            v: 'HSoHeSjvIdY', vs: 'Cierre obligatorio de todo día de hombros. Salud del manguito rotador.',
-            tip: 'Siempre al final de cualquier día de hombros. Mantiene el manguito rotador sano y previene las lesiones más comunes del hombro en atletas.',
-            er: []
-          }
-        ]
-      },
-      {
-        t: 'BRAZOS — SUPERSETS BÍCEPS + TRÍCEPS (estilo Arnold)',
-        s: true,
-        e: [
-          {
-            n: 'Curl Inclinado con Mancuernas',
-            muscle: 'Bíceps cabeza larga (máximo estiramiento en posición inclinada)',
-            sets: '3', reps: '10', rest: 0, tempo: '3-0-1',
-            v: 'av7-8igSXTs', vs: 'Banco a 45°. Brazos colgando. Máximo estiramiento del bíceps en el inicio.',
-            tip: 'La posición inclinada pone el bíceps en la máxima posición de estiramiento al inicio — esto genera el mayor estímulo para la cabeza larga. Es científicamente uno de los ejercicios con mayor activación del bíceps.',
-            er: []
-          },
-          {
-            n: 'Press Francés con Barra EZ',
-            muscle: 'Tríceps cabeza larga (más grande del tríceps)',
-            sets: '3', reps: '10', rest: 75, tempo: '3-1-1',
-            v: 'vB5OHsJ3EMc', vs: 'Barra EZ. Baja hacia la frente. Codos apuntan al techo y no se mueven.',
-            tip: 'La cabeza larga del tríceps solo se activa completamente con el brazo elevado. Es la cabeza más grande (⅔ del tríceps total). Sin este ejercicio el tríceps queda subdesarrollado en su porción más grande.',
-            er: []
-          }
-        ]
-      },
-      {
-        t: 'BRAZOS — SUPERSETS VOLUMEN',
-        s: true,
-        e: [
-          {
-            n: 'Curl con Barra EZ (de pie)',
-            muscle: 'Bíceps completo + Braquial',
-            sets: '3', reps: '12', rest: 0, tempo: '2-1-3',
-            v: 'av7-8igSXTs', vs: 'Baja en 3 seg. Énfasis en el excéntrico lento.',
-            tip: 'La bajada lenta (3 seg) genera más estímulo de hipertrofia que la subida. El músculo crece más en la fase excéntrica (elongación bajo tensión).',
-            er: []
-          },
-          {
-            n: 'Extensión en Polea (agarre cuerda)',
-            muscle: 'Tríceps lateral y medial',
-            sets: '3', reps: '15', rest: 60, tempo: '2-1-2',
-            v: 'vB5OHsJ3EMc', vs: 'Separa la cuerda al final. Codos fijos pegados al cuerpo.',
-            tip: 'La cuerda permite separar las manos al final activando más la cabeza lateral del tríceps. Codos absolutamente fijos.',
-            er: []
-          }
-        ]
-      },
-      {
-        t: 'CORE INTENSO (no opcional — el core es parte del físico atlético)',
-        s: false,
-        e: [
-          {
-            n: 'Ab Wheel + Knee Raises en Barra + Plancha RKC',
-            muscle: 'Core completo: recto + oblicuos + transverso',
-            sets: '3', reps: '10 AW + 12 KR + 45 seg plancha', rest: 75, tempo: '',
-            v: 'AhGCpbPf77U', vs: '10 rueda abdominal → sin pausa → 12 knee raises colgado → sin pausa → 45 seg plancha RKC.',
-            tip: 'El triset de core trabaja los 3 planos del core atlético: flexión (rueda), flexión con carga en colgado (knee raises) y estabilización (plancha). Sin descanso entre los 3.',
-            er: []
-          }
-        ]
-      },
-      {
-        t: 'CARDIO FINISHER',
-        s: false,
-        e: [
-          {
-            n: 'HIIT Bicicleta Estática (Tabata)',
-            muscle: 'Cardiovascular + Quema calórica',
-            sets: '1', reps: '4 min Tabata + 10 min suave', rest: 0,
-            v: 'nMNMFiCqxZ8', vs: 'Tabata: 20 seg al máximo + 10 seg descanso × 8. Luego 10 min pedaleando suave.',
-            tip: 'El protocolo Tabata en bicicleta: 4 minutos de trabajo total pero son los 4 minutos más intensos de la sesión. 20 seg pedaleando al máximo absoluto + 10 seg de pausa. 8 rondas. Luego 10 min suave para la vuelta a la calma.',
-            er: []
-          }
-        ]
-      }
-    ]
-  },
-
-  casa: {
-    focus: 'Hombros · Brazos · Core · Sin equipamiento',
-    warmup: '5 min rotaciones + calentamiento dinámico de hombro y codo',
-    blocks: [
-      {
-        t: 'HOMBROS EN CASA (4 vueltas)',
-        s: false,
-        e: [
-          {
-            n: 'Pike Push-ups con Pies Elevados + Elevaciones Laterales con Botellas',
-            muscle: 'Hombros completo',
-            sets: '4', reps: '8 pike + 20 elevaciones', rest: 90, tempo: '3-0-1 / 2-1-2',
-            v: 'sposDXWEB0A', vs: '8 pike push-ups con pies en silla → sin pausa → 20 elevaciones laterales con botellas 1.5L.',
-            tip: 'El pike push-up trabaja el hombro en presión vertical. Las elevaciones laterales trabajan el deltoides medial para el ancho. Juntos = desarrollo completo del hombro en casa.',
-            er: []
-          }
-        ]
-      },
-      {
-        t: 'BRAZOS SUPERSETS EN CASA',
-        s: true,
-        e: [
-          {
-            n: 'Curl con Mochila (supino)',
-            muscle: 'Bíceps',
-            sets: '4', reps: '12', rest: 0, tempo: '3-1-3',
-            v: 'av7-8igSXTs', vs: 'Baja en 3 seg. Pausa 1 seg abajo. Sube explosivo.',
-            tip: 'El tempo 3-1-3 maximiza el tiempo bajo tensión compensando el peso limitado de la mochila.',
-            er: []
-          },
-          {
-            n: 'Dips en Silla con Pausa',
-            muscle: 'Tríceps',
-            sets: '4', reps: '12', rest: 75, tempo: '3-2-1',
-            v: 'l4kQd9eWclE', vs: 'Baja en 3 seg. Pausa 2 seg abajo. Sube en 1 seg.',
-            tip: 'La pausa de 2 seg en la posición más baja elimina la inercia y forza al tríceps a iniciar el movimiento desde cero en cada rep.',
-            er: []
-          }
-        ]
-      },
-      {
-        t: 'CORE + FINISHER METABÓLICO',
-        s: false,
-        e: [
-          {
-            n: 'Hollow Body + Russian Twists + Mountain Climbers',
-            muscle: 'Core 360° + Cardiovascular',
-            sets: '3', reps: '30 seg HB + 30 twists + 30 seg MC', rest: 90, tempo: '',
-            v: 'ASdvN_XEl_c', vs: '30 seg hollow body → 30 russian twists con botella → 30 seg mountain climbers. Sin pausa entre los 3.',
-            tip: 'El triset de core cubre los 3 planos: estabilización (hollow), rotación (twists), y dinámica (mountain climbers). Sin pausa entre los 3 ejercicios.',
-            er: []
-          }
-        ]
-      }
-    ]
-  }
-},
-
-// ════════════════════════════════════════════════════════════════
-// DOMINGO — Descanso activo y recuperación
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════
+// DOMINGO — Descanso activo
+// ════════════════════════════════════════════
 {
   day: 'DOM', label: 'DESCANSO ACTIVO', rest: true, gym: null, casa: null
 }
 
-]; // FIN DEL PLAN
+]; // FIN PLAN
 
 
 
