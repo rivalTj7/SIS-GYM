@@ -47,6 +47,17 @@ ${JSON_SHAPE(servings)}
 Reglas: tortilla ~30g, huevo mediano ~50g, frijoles ~100g, pan francés ~50g.
 confidence: "alta"=específico, "media"=variaciones posibles, "baja"=muy vago.`;
 
+const IMAGE_PROMPT = (servings: number) =>
+`Eres nutricionista experto en comida latinoamericana/guatemalteca.
+Analiza esta imagen de comida y estima los macronutrientes de todo lo que ves.
+Porciones visibles: ${servings}
+
+Devuelve SOLO JSON válido (sin markdown, sin texto extra):
+${JSON_SHAPE(servings)}
+
+Identifica cada componente visible. Usa referencias GT/latinoamérica.
+confidence: "alta"=comida claramente visible, "media"=partes poco claras, "baja"=imagen poco clara.`;
+
 const DEV_MOCK: FoodEstimate = {
   food_name: 'Desayuno típico guatemalteco (MODO DEV)',
   serving_description: '1 plato',
@@ -71,15 +82,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { description, servings } = schema.parse(body);
+    const { description, image, mimeType, servings } = schema.parse(body);
 
-    if (!description) {
-      return NextResponse.json({ error: 'Se requiere descripción' }, { status: 400 });
+    if (!description && !image) {
+      return NextResponse.json({ error: 'Se requiere descripción o imagen' }, { status: 400 });
     }
 
-    // Modo desarrollo: retorna datos mock sin llamar a la IA
     if (process.env.DEV_MODE === 'true') {
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 900));
       return NextResponse.json({ estimate: { ...DEV_MOCK, servings } });
     }
 
@@ -88,19 +98,46 @@ export async function POST(req: NextRequest) {
 
     const client = new Groq({ apiKey });
 
-    const completion = await client.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: TEXT_PROMPT(description, servings) }],
-      temperature: 0.2,
-      max_tokens: 1024,
-      response_format: { type: 'json_object' },
-    });
+    let text: string;
 
-    const text = completion.choices[0]?.message?.content ?? '';
+    if (image) {
+      // Visión con Llama 4 Scout
+      const completion = await client.chat.completions.create({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image_url',
+                image_url: { url: `data:${mimeType};base64,${image}` },
+              },
+              {
+                type: 'text',
+                text: IMAGE_PROMPT(servings),
+              },
+            ],
+          },
+        ],
+        temperature: 0.2,
+        max_tokens: 1024,
+      });
+      text = completion.choices[0]?.message?.content ?? '';
+    } else {
+      // Solo texto con Llama 3.3
+      const completion = await client.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: TEXT_PROMPT(description, servings) }],
+        temperature: 0.2,
+        max_tokens: 1024,
+        response_format: { type: 'json_object' },
+      });
+      text = completion.choices[0]?.message?.content ?? '';
+    }
 
     let estimate: FoodEstimate;
     try {
-      estimate = JSON.parse(text);
+      estimate = JSON.parse(text.replace(/```json|```/g, '').trim());
     } catch {
       console.error('Parse error:', text);
       return NextResponse.json({ error: 'No se pudo procesar la respuesta de la IA' }, { status: 422 });

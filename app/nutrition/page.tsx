@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import BottomNav from '@/components/BottomNav';
@@ -66,10 +66,12 @@ export default function NutritionPage() {
   const [loadingData, setLoadingData] = useState(false);
 
   const [query, setQuery] = useState('');
+  const [imageData, setImageData] = useState<{ base64: string; mimeType: string; preview: string } | null>(null);
   const [estimating, setEstimating] = useState(false);
   const [estimate, setEstimate] = useState<FoodEstimate | null>(null);
   const [mealType, setMealType] = useState('desayuno');
   const [savingEstimate, setSavingEstimate] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ food_name: '', kcal: '', protein_g: '', carbs_g: '', fat_g: '', meal_type: 'desayuno' });
@@ -96,15 +98,29 @@ export default function NutritionPage() {
     setLoadingData(false);
   }
 
+  function handleImageFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      const base64 = dataUrl.split(',')[1];
+      setImageData({ base64, mimeType: file.type || 'image/jpeg', preview: dataUrl });
+      setQuery('');
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function estimateFood() {
-    if (!query.trim()) return;
+    if (!query.trim() && !imageData) return;
     setEstimating(true);
     setEstimate(null);
     try {
+      const body = imageData
+        ? { image: imageData.base64, mimeType: imageData.mimeType, servings: 1 }
+        : { description: query, servings: 1 };
       const res = await fetch('/api/nutrition/estimate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: query, servings: 1 }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (res.ok) setEstimate(data.estimate);
@@ -284,13 +300,60 @@ export default function NutritionPage() {
           Describí tu comida y calculamos los macros automáticamente.
         </div>
 
-        <textarea
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder={'Ej: "2 huevos fritos con pan francés"\n"arroz con pollo, porción mediana"'}
-          style={{ height: 76, resize: 'none', marginBottom: 10, fontSize: 14 }}
-          onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) estimateFood(); }}
+        {/* Input imagen o texto */}
+        {imageData ? (
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <img
+              src={imageData.preview}
+              alt="Foto de comida"
+              style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 12, display: 'block' }}
+            />
+            <button
+              onClick={() => setImageData(null)}
+              style={{
+                position: 'absolute', top: 8, right: 8,
+                background: 'rgba(0,0,0,0.7)', border: 'none',
+                color: '#fff', width: 28, height: 28, borderRadius: '50%',
+                fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >×</button>
+          </div>
+        ) : (
+          <textarea
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder={'Ej: "2 huevos fritos con pan francés"\n"arroz con pollo, porción mediana"'}
+            style={{ height: 76, resize: 'none', marginBottom: 10, fontSize: 14 }}
+            onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) estimateFood(); }}
+          />
+        )}
+
+        {/* Botón de foto */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ''; }}
         />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          style={{
+            width: '100%', marginBottom: 10,
+            background: 'rgba(77,170,255,0.08)',
+            border: '1.5px dashed rgba(77,170,255,0.25)',
+            color: '#4daaff', borderRadius: 12,
+            padding: '11px', fontWeight: 700, fontSize: 12,
+            letterSpacing: 1, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4daaff">
+            <path d="M12 15.2A3.2 3.2 0 0 1 8.8 12 3.2 3.2 0 0 1 12 8.8 3.2 3.2 0 0 1 15.2 12 3.2 3.2 0 0 1 12 15.2M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/>
+          </svg>
+          {imageData ? 'Cambiar foto' : 'Sacar foto / subir imagen'}
+        </button>
 
         <div style={{ display: 'flex', gap: 8 }}>
           <select value={mealType} onChange={e => setMealType(e.target.value)} style={{ flex: 1, fontSize: 13 }}>
@@ -301,7 +364,7 @@ export default function NutritionPage() {
           </select>
           <button
             onClick={estimateFood}
-            disabled={estimating || !query.trim()}
+            disabled={estimating || (!query.trim() && !imageData)}
             style={{
               padding: '0 20px',
               background: estimating ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #c8ff00, #aadc00)',
