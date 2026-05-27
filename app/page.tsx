@@ -392,6 +392,10 @@ const PLAN = [
 
 
 const MEAL_TYPES = ['desayuno', 'almuerzo', 'cena', 'snack'];
+const MEAL_ORDER = ['desayuno', 'almuerzo', 'cena', 'snack'] as const;
+const MEAL_LABELS: Record<string, string> = {
+  desayuno: '🌅 Desayuno', almuerzo: '☀️ Almuerzo', cena: '🌙 Cena', snack: '🍎 Snack',
+};
 const CONFIDENCE_COLOR: Record<string, string> = {
   alta: '#3ddc84', media: '#c8ff00', baja: '#ff4d4d',
 };
@@ -869,22 +873,78 @@ function RutinaTab() {
   );
 }
 
+// ── Nutricion Tab helpers ─────────────────────────────────
+function compressImage(file: File): Promise<{ base64: string; mimeType: string }> {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 800;
+        let { width: w, height: h } = img;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round((h / w) * MAX); w = MAX; }
+          else { w = Math.round((w / h) * MAX); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        resolve({ base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' });
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function getRecommendation(profile: Profile, totals: { kcal: number; protein_g: number }) {
+  if (!profile || totals.kcal === 0) return null;
+  const kcalPct = totals.kcal / profile.goal_kcal;
+  const protPct = totals.protein_g / profile.goal_prot;
+  const remKcal = profile.goal_kcal - totals.kcal;
+  const remProt = Math.round(profile.goal_prot - totals.protein_g);
+  if (kcalPct > 1.1) return { icon: '⚠️', msg: `Superaste tu meta por ${Math.round(totals.kcal - profile.goal_kcal)} kcal. La próxima comida debería ser ligera.`, color: '#ff4d4d' };
+  if (kcalPct > 1.0) return { icon: '📊', msg: 'Justo en tu meta calórica. Mantené las siguientes comidas ligeras.', color: '#f4a261' };
+  if (protPct < 0.5) return { icon: '💪', msg: `Solo ${Math.round(totals.protein_g)}g de proteína. Necesitás ${remProt}g más — priorizá pollo, atún, huevo o yogurt.`, color: '#4daaff' };
+  if (kcalPct > 0.75 && protPct > 0.75) return { icon: '🔥', msg: `Excelente día. ${Math.round(totals.protein_g)}g proteína y ${totals.kcal} kcal registrados.`, color: '#3ddc84' };
+  return { icon: '📊', msg: `Te quedan ${remKcal} kcal y ${remProt}g de proteína para hoy.`, color: '#c8ff00' };
+}
+
+function formatDateLabel(date: string, today: string): string {
+  if (date === today) return 'HOY';
+  const d = new Date(today + 'T12:00:00');
+  d.setDate(d.getDate() - 1);
+  if (date === d.toISOString().slice(0, 10)) return 'AYER';
+  const dt = new Date(date + 'T12:00:00');
+  return dt.toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
+}
+
 // ── Nutricion Tab ─────────────────────────────────────────
 function NutricionTab({ profile, onProfileSaved }: { profile: Profile; onProfileSaved: (p: any) => void }) {
   const [subTab, setSubTab] = useState<'log' | 'tdee'>('log');
   const [foods, setFoods] = useState<FoodLog[]>([]);
   const [totals, setTotals] = useState({ kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
-  const [loading, setLoading] = useState(false);
+  const [viewDate, setViewDate] = useState(TODAY);
 
-  // AI Estimator state
+  const [inputMode, setInputMode] = useState<'text' | 'photo'>('text');
+  const photoRef = useRef<HTMLInputElement>(null);
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [photoBase64, setPhotoBase64] = useState('');
+  const [photoMimeType, setPhotoMimeType] = useState('image/jpeg');
+
   const [query, setQuery] = useState('');
+  const [servings, setServings] = useState(1);
   const [estimating, setEstimating] = useState(false);
   const [estimate, setEstimate] = useState<FoodEstimate | null>(null);
+  const [editKcal, setEditKcal] = useState('');
+  const [editProt, setEditProt] = useState('');
+  const [editCarbs, setEditCarbs] = useState('');
+  const [editFat, setEditFat] = useState('');
   const [mealType, setMealType] = useState('desayuno');
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState('');
+  const [recentFoods, setRecentFoods] = useState<Array<{ name: string; kcal: number; protein_g: number; carbs_g: number; fat_g: number }>>([]);
 
-  // TDEE form
   const [sex, setSex] = useState<'m' | 'f'>('m');
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
@@ -892,26 +952,47 @@ function NutricionTab({ profile, onProfileSaved }: { profile: Profile; onProfile
   const [activity, setActivity] = useState<'sed' | 'med' | 'hi'>('med');
   const [goal, setGoal] = useState<'def' | 'mant' | 'vol' | 'agr'>('def');
   const [savingProfile, setSavingProfile] = useState(false);
+  const [toast, setToast] = useState('');
 
-  useEffect(() => { fetchFoods(); }, []);
+  useEffect(() => { fetchFoods(); }, [viewDate]);
 
   async function fetchFoods() {
-    const r = await fetch(`/api/nutrition?date=${TODAY}`);
+    const r = await fetch(`/api/nutrition?date=${viewDate}`);
     if (r.ok) { const d = await r.json(); setFoods(d.foods); setTotals(d.totals); }
   }
 
+  async function handlePhotoSelect(e: { target: { files: FileList | null } }) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoPreview(URL.createObjectURL(file));
+    const compressed = await compressImage(file);
+    setPhotoBase64(compressed.base64);
+    setPhotoMimeType(compressed.mimeType);
+  }
+
   async function estimateFood() {
-    if (!query.trim()) return;
+    const hasText = inputMode === 'text' && query.trim();
+    const hasPhoto = inputMode === 'photo' && photoBase64;
+    if (!hasText && !hasPhoto) return;
     setEstimating(true); setEstimate(null);
+    const body = hasPhoto
+      ? { image: photoBase64, mimeType: photoMimeType, servings }
+      : { description: query, servings };
     const r = await fetch('/api/nutrition/estimate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ description: query }),
+      body: JSON.stringify(body),
     });
     const d = await r.json();
     setEstimating(false);
-    if (r.ok) setEstimate(d.estimate);
-    else showToast('Error: ' + d.error);
+    if (r.ok) {
+      const est = d.estimate;
+      setEstimate(est);
+      setEditKcal(String(est.kcal));
+      setEditProt(String(est.protein_g));
+      setEditCarbs(String(est.carbs_g));
+      setEditFat(String(est.fat_g));
+    } else showToast('Error: ' + (d.error || 'No se pudo estimar'));
   }
 
   async function saveEstimate() {
@@ -922,19 +1003,34 @@ function NutricionTab({ profile, onProfileSaved }: { profile: Profile; onProfile
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         food_name: estimate.food_name,
-        kcal: estimate.kcal,
-        protein_g: estimate.protein_g,
-        carbs_g: estimate.carbs_g,
-        fat_g: estimate.fat_g,
+        kcal: parseInt(editKcal) || estimate.kcal,
+        protein_g: parseFloat(editProt) || estimate.protein_g,
+        carbs_g: parseFloat(editCarbs) || estimate.carbs_g,
+        fat_g: parseFloat(editFat) || estimate.fat_g,
         meal_type: mealType,
+        logged_at: viewDate,
       }),
     });
     setSaving(false);
     if (r.ok) {
-      setQuery(''); setEstimate(null);
+      setRecentFoods(prev => [
+        { name: estimate!.food_name, kcal: parseInt(editKcal) || estimate!.kcal, protein_g: parseFloat(editProt) || 0, carbs_g: parseFloat(editCarbs) || 0, fat_g: parseFloat(editFat) || 0 },
+        ...prev.filter(f => f.name !== estimate!.food_name),
+      ].slice(0, 5));
+      setQuery(''); setEstimate(null); setPhotoPreview(''); setPhotoBase64('');
+      if (photoRef.current) photoRef.current.value = '';
       showToast(`✅ ${estimate.food_name} guardado`);
       fetchFoods();
     }
+  }
+
+  async function quickAddFood(food: { name: string; kcal: number; protein_g: number; carbs_g: number; fat_g: number }) {
+    const r = await fetch('/api/nutrition', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ food_name: food.name, kcal: food.kcal, protein_g: food.protein_g, carbs_g: food.carbs_g, fat_g: food.fat_g, meal_type: mealType, logged_at: viewDate }),
+    });
+    if (r.ok) { showToast(`✅ ${food.name} añadido`); fetchFoods(); }
   }
 
   async function deleteFood(id: string) {
@@ -955,6 +1051,34 @@ function NutricionTab({ profile, onProfileSaved }: { profile: Profile; onProfile
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000); }
 
+  function prevDay() {
+    const d = new Date(viewDate + 'T12:00:00');
+    d.setDate(d.getDate() - 1);
+    setViewDate(d.toISOString().slice(0, 10));
+  }
+  function nextDay() {
+    const d = new Date(viewDate + 'T12:00:00');
+    d.setDate(d.getDate() + 1);
+    const next = d.toISOString().slice(0, 10);
+    if (next <= TODAY) setViewDate(next);
+  }
+
+  const goalFat = profile ? Math.round(profile.goal_kcal * 0.25 / 9) : 50;
+  const macroList = profile ? [
+    { label: 'Calorías', curr: totals.kcal, goal: profile.goal_kcal, color: '#c8ff00', unit: 'kcal' },
+    { label: 'Proteína', curr: Math.round(totals.protein_g), goal: profile.goal_prot, color: '#4daaff', unit: 'g' },
+    { label: 'Carbos', curr: Math.round(totals.carbs_g), goal: profile.goal_carb, color: '#f4a261', unit: 'g' },
+    { label: 'Grasas', curr: Math.round(totals.fat_g), goal: goalFat, color: '#ff6b6b', unit: 'g' },
+  ] : [];
+
+  const groupedFoods = MEAL_ORDER.reduce((acc, mt) => {
+    acc[mt] = foods.filter(f => f.meal_type === mt);
+    return acc;
+  }, {} as Record<string, FoodLog[]>);
+
+  const recommendation = getRecommendation(profile, totals);
+  const canEstimate = (inputMode === 'text' && !!query.trim()) || (inputMode === 'photo' && !!photoBase64);
+
   return (
     <div>
       <div style={{ padding: '20px 18px 0' }}>
@@ -962,7 +1086,6 @@ function NutricionTab({ profile, onProfileSaved }: { profile: Profile; onProfile
         <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 42, lineHeight: 0.9, letterSpacing: -1 }}>NUTRICIÓN<br /><span style={{ color: '#c8ff00' }}>Y MACROS</span></div>
       </div>
 
-      {/* Sub tabs */}
       <div style={{ display: 'flex', gap: 8, padding: '16px 18px 0' }}>
         {([['log', '🥗 Registro'], ['tdee', '⚙️ Mi TDEE']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setSubTab(id)} style={{ flex: 1, padding: '10px', background: subTab === id ? '#c8ff00' : '#111', color: subTab === id ? '#000' : '#555', border: `1px solid ${subTab === id ? '#c8ff00' : '#2a2a2a'}`, borderRadius: 9, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>{label}</button>
@@ -971,110 +1094,202 @@ function NutricionTab({ profile, onProfileSaved }: { profile: Profile; onProfile
 
       {subTab === 'log' && (
         <div style={{ padding: '16px 18px 0' }}>
-          {/* Daily progress */}
+
+          {/* Date navigation */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, background: '#111', border: '1px solid #2a2a2a', borderRadius: 12, padding: '10px 14px' }}>
+            <button onClick={prevDay} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 24, lineHeight: 1, padding: '0 6px' }}>‹</button>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 18, letterSpacing: 2, color: viewDate === TODAY ? '#c8ff00' : '#f2f0ea' }}>{formatDateLabel(viewDate, TODAY)}</div>
+              {viewDate !== TODAY && <div style={{ fontSize: 10, color: '#444', marginTop: 1 }}>{viewDate}</div>}
+            </div>
+            <button onClick={nextDay} disabled={viewDate >= TODAY} style={{ background: 'none', border: 'none', color: viewDate >= TODAY ? '#222' : '#555', cursor: viewDate >= TODAY ? 'default' : 'pointer', fontSize: 24, lineHeight: 1, padding: '0 6px' }}>›</button>
+          </div>
+
+          {/* 4 macro bars */}
           {profile && (
-            <div style={{ marginBottom: 16 }}>
-              {[
-                { label: 'Calorías', curr: totals.kcal, goal: profile.goal_kcal, color: '#c8ff00', unit: 'kcal' },
-                { label: 'Proteína', curr: Math.round(totals.protein_g), goal: profile.goal_prot, color: '#4daaff', unit: 'g' },
-              ].map(m => (
-                <div key={m.label} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 11, fontWeight: 700 }}>
-                    <span style={{ color: '#888' }}>{m.label}</span>
-                    <span style={{ color: m.color }}>{m.curr} / {m.goal} {m.unit}</span>
+            <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}>
+              {macroList.map(m => {
+                const pct = Math.min(100, Math.round(m.curr / m.goal * 100));
+                const over = m.curr > m.goal * 1.05;
+                return (
+                  <div key={m.label} style={{ marginBottom: 9 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: '#555' }}>{m.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: over ? '#ff4d4d' : m.color }}>{m.curr}<span style={{ color: '#333', fontWeight: 400 }}>/{m.goal}{m.unit}</span></span>
+                    </div>
+                    <div style={{ background: '#1a1a1a', borderRadius: 4, height: 6, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', background: over ? '#ff4d4d' : m.color, borderRadius: 4, width: `${pct}%`, transition: 'width .4s' }} />
+                    </div>
                   </div>
-                  <div style={{ background: '#1a1a1a', borderRadius: 4, height: 6, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', background: m.color, borderRadius: 4, width: `${Math.min(100, Math.round(m.curr / m.goal * 100))}%`, transition: 'width .4s' }} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
+            </div>
+          )}
+
+          {/* Recommendation */}
+          {recommendation && (
+            <div style={{ background: `${recommendation.color}10`, border: `1px solid ${recommendation.color}30`, borderRadius: 12, padding: '11px 14px', marginBottom: 14, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>{recommendation.icon}</span>
+              <div style={{ fontSize: 12, color: '#bbb', lineHeight: 1.6 }}>{recommendation.msg}</div>
             </div>
           )}
 
           {/* AI Estimator */}
-          <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: 14, padding: 16, marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#c8ff00', marginBottom: 10 }}>🤖 ESTIMAR CON IA</div>
-            <div style={{ fontSize: 12, color: '#666', marginBottom: 10 }}>Describí tu comida en lenguaje natural y la IA calcula los macros.</div>
-            <textarea
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder={'Ej: "pan con huevo frito y salchicha"\n"2 tortillas con frijoles y queso"\n"arroz con pollo, porción grande"'}
-              style={{ width: '100%', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 10, padding: '10px 12px', color: '#f2f0ea', fontSize: 13, resize: 'none', outline: 'none', height: 80, fontFamily: 'inherit' }}
-              onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) estimateFood(); }}
-            />
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: 14, padding: 16, marginBottom: 14 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#c8ff00', marginBottom: 12 }}>🤖 ESTIMADOR IA</div>
+
+            {/* Text / Photo mode */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+              {(['text', 'photo'] as const).map(m => (
+                <button key={m} onClick={() => { setInputMode(m); setEstimate(null); }} style={{ flex: 1, padding: '9px', background: inputMode === m ? 'rgba(200,255,0,0.1)' : '#1a1a1a', color: inputMode === m ? '#c8ff00' : '#555', border: `1.5px solid ${inputMode === m ? '#c8ff00' : '#2a2a2a'}`, borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                  {m === 'text' ? '✏️ Describir' : '📷 Foto'}
+                </button>
+              ))}
+            </div>
+
+            {inputMode === 'text' && (
+              <textarea value={query} onChange={e => setQuery(e.target.value)}
+                placeholder={'Ej: "2 tortillas con frijoles y queso"\n"arroz con pollo, porción grande"'}
+                style={{ width: '100%', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 10, padding: '10px 12px', color: '#f2f0ea', fontSize: 13, resize: 'none', outline: 'none', height: 72, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              />
+            )}
+
+            {inputMode === 'photo' && (
+              <div>
+                <input ref={photoRef} type="file" accept="image/*" onChange={handlePhotoSelect} style={{ display: 'none' }} />
+                {!photoPreview ? (
+                  <button onClick={() => photoRef.current?.click()} style={{ width: '100%', background: '#1a1a1a', border: '2px dashed #333', borderRadius: 10, padding: '28px 16px', cursor: 'pointer', textAlign: 'center' }}>
+                    <div style={{ fontSize: 36, marginBottom: 8 }}>📷</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#888' }}>Tomar foto o elegir de galería</div>
+                    <div style={{ fontSize: 11, color: '#444', marginTop: 4 }}>La IA detectará la comida automáticamente</div>
+                  </button>
+                ) : (
+                  <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden' }}>
+                    <img src={photoPreview} alt="preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                    <button onClick={() => { setPhotoPreview(''); setPhotoBase64(''); if (photoRef.current) photoRef.current.value = ''; }}
+                      style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.75)', border: 'none', color: '#fff', borderRadius: '50%', width: 30, height: 30, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                    <button onClick={() => photoRef.current?.click()}
+                      style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(200,255,0,0.9)', border: 'none', color: '#000', borderRadius: 7, padding: '5px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Cambiar</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Servings + meal + button */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '5px 8px', flexShrink: 0 }}>
+                <button onClick={() => setServings(s => Math.max(0.5, +(s - 0.5).toFixed(1)))} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 0 }}>−</button>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#f2f0ea', minWidth: 26, textAlign: 'center' }}>{servings}×</span>
+                <button onClick={() => setServings(s => Math.min(5, +(s + 0.5).toFixed(1)))} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 0 }}>+</button>
+              </div>
               <select value={mealType} onChange={e => setMealType(e.target.value)} style={{ flex: 1, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '8px 10px', color: '#f2f0ea', fontSize: 12 }}>
                 {MEAL_TYPES.map(m => <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>)}
               </select>
-              <button onClick={estimateFood} disabled={estimating || !query.trim()} style={{ padding: '8px 16px', background: estimating ? '#333' : '#c8ff00', color: estimating ? '#666' : '#000', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                {estimating ? '⏳ Estimando...' : '✨ Estimar'}
+              <button onClick={estimateFood} disabled={estimating || !canEstimate}
+                style={{ padding: '8px 14px', background: estimating ? '#1a1a1a' : (canEstimate ? '#c8ff00' : '#1a1a1a'), color: estimating || !canEstimate ? '#444' : '#000', border: `1px solid ${canEstimate ? '#c8ff00' : '#2a2a2a'}`, borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: canEstimate && !estimating ? 'pointer' : 'default', whiteSpace: 'nowrap', transition: 'all .2s' }}>
+                {estimating ? '⏳...' : '✨ ESTIMAR'}
               </button>
             </div>
 
             {/* Estimate result */}
             {estimate && (
-              <div style={{ marginTop: 14, background: '#0f0f0f', border: '1px solid #2a2a2a', borderRadius: 10, padding: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+              <div style={{ marginTop: 14, background: '#0d0d0d', border: '1px solid #333', borderRadius: 12, padding: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>{estimate.food_name}</div>
-                    <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>{estimate.serving_description}</div>
+                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 2 }}>{estimate.food_name}</div>
+                    <div style={{ fontSize: 11, color: '#555' }}>{estimate.serving_description}</div>
                   </div>
-                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, padding: '3px 8px', borderRadius: 4, background: `${CONFIDENCE_COLOR[estimate.confidence]}22`, color: CONFIDENCE_COLOR[estimate.confidence] }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, padding: '3px 8px', borderRadius: 4, background: `${CONFIDENCE_COLOR[estimate.confidence]}22`, color: CONFIDENCE_COLOR[estimate.confidence], flexShrink: 0, marginLeft: 8 }}>
                     {estimate.confidence.toUpperCase()}
                   </span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+
+                {/* Editable macro grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 6 }}>
                   {[
-                    { l: 'Kcal', v: estimate.kcal, c: '#c8ff00' },
-                    { l: 'Prot', v: `${estimate.protein_g}g`, c: '#4daaff' },
-                    { l: 'Carbs', v: `${estimate.carbs_g}g`, c: '#ff4d4d' },
-                    { l: 'Grasas', v: `${estimate.fat_g}g`, c: '#f4a261' },
+                    { l: 'Kcal', v: editKcal, set: setEditKcal, c: '#c8ff00' },
+                    { l: 'Prot g', v: editProt, set: setEditProt, c: '#4daaff' },
+                    { l: 'Carbs g', v: editCarbs, set: setEditCarbs, c: '#f4a261' },
+                    { l: 'Grasas g', v: editFat, set: setEditFat, c: '#ff6b6b' },
                   ].map(m => (
-                    <div key={m.l} style={{ textAlign: 'center', background: '#1a1a1a', borderRadius: 8, padding: '8px 4px' }}>
-                      <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 20, color: m.c }}>{m.v}</div>
-                      <div style={{ fontSize: 9, color: '#555', fontWeight: 700, letterSpacing: 1 }}>{m.l}</div>
+                    <div key={m.l} style={{ textAlign: 'center', background: '#1a1a1a', borderRadius: 9, padding: '8px 4px' }}>
+                      <input value={m.v} onChange={e => m.set(e.target.value)} type="number"
+                        style={{ width: '100%', background: 'none', border: 'none', outline: 'none', textAlign: 'center', fontFamily: '"Bebas Neue", sans-serif', fontSize: 22, color: m.c, padding: 0 }} />
+                      <div style={{ fontSize: 8, color: '#444', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>{m.l}</div>
                     </div>
                   ))}
                 </div>
-                {/* Breakdown */}
+                <div style={{ fontSize: 9, color: '#333', textAlign: 'center', marginBottom: 10 }}>Toca los valores para editarlos</div>
+
                 {estimate.items?.length > 0 && (
                   <div style={{ marginBottom: 10 }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#555', marginBottom: 6 }}>DESGLOSE</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#444', marginBottom: 5 }}>DESGLOSE</div>
                     {estimate.items.map((item, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: '1px solid #1a1a1a', color: '#888' }}>
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: '1px solid #1a1a1a', color: '#666' }}>
                         <span>{item.name}</span>
-                        <span style={{ color: '#c8ff00' }}>{item.kcal} kcal · {item.protein_g}g P</span>
+                        <span style={{ color: '#888' }}>{item.kcal} kcal · {item.protein_g}g P</span>
                       </div>
                     ))}
                   </div>
                 )}
-                {estimate.notes && <div style={{ fontSize: 11, color: '#555', marginBottom: 10, fontStyle: 'italic' }}>💡 {estimate.notes}</div>}
-                <button onClick={saveEstimate} disabled={saving} style={{ width: '100%', background: '#3ddc84', color: '#000', border: 'none', borderRadius: 9, padding: '11px', fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, letterSpacing: 2, cursor: 'pointer' }}>
-                  {saving ? '...' : '+ GUARDAR EN MI REGISTRO'}
+                {estimate.notes && <div style={{ fontSize: 11, color: '#444', marginBottom: 10, fontStyle: 'italic' }}>💡 {estimate.notes}</div>}
+                <button onClick={saveEstimate} disabled={saving}
+                  style={{ width: '100%', background: '#3ddc84', color: '#000', border: 'none', borderRadius: 9, padding: '12px', fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, letterSpacing: 2, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
+                  {saving ? 'GUARDANDO...' : `+ GUARDAR EN ${mealType.toUpperCase()}`}
                 </button>
               </div>
             )}
           </div>
 
-          {/* Food log */}
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#555', marginBottom: 8 }}>REGISTRO DE HOY</div>
-            {foods.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#555', fontSize: 12, padding: '20px 0' }}>Sin registros aún. Describí tu primera comida arriba ↑</div>
-            ) : (
-              foods.map(f => (
-                <div key={f.id} style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: 10, padding: '10px 12px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{f.food_name}</div>
-                    <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>
-                      {f.kcal} kcal · {f.protein_g}g P · {f.meal_type}
+          {/* Quick re-add */}
+          {recentFoods.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#555', marginBottom: 8 }}>⚡ REPETIR COMIDA</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {recentFoods.map((f, i) => (
+                  <div key={i} style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: 10, padding: '9px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600 }}>{f.name}</div>
+                      <div style={{ fontSize: 10, color: '#555', marginTop: 1 }}>{f.kcal} kcal · {f.protein_g}g P</div>
                     </div>
+                    <button onClick={() => quickAddFood(f)} style={{ background: 'rgba(200,255,0,0.08)', border: '1px solid rgba(200,255,0,0.2)', color: '#c8ff00', borderRadius: 7, padding: '5px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>+ Agregar</button>
                   </div>
-                  <button onClick={() => deleteFood(f.id)} style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: 16, padding: 4 }}>✕</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Food log grouped by meal */}
+          {MEAL_ORDER.map(mt => {
+            const mFoods = groupedFoods[mt];
+            const mtTotals = mFoods.reduce((a, f) => ({ kcal: a.kcal + Number(f.kcal), prot: a.prot + Number(f.protein_g) }), { kcal: 0, prot: 0 });
+            return (
+              <div key={mt} style={{ marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#555' }}>{MEAL_LABELS[mt]}</div>
+                  {mFoods.length > 0 && <div style={{ fontSize: 10, color: '#444' }}>{mtTotals.kcal} kcal · {Math.round(mtTotals.prot)}g P</div>}
                 </div>
-              ))
-            )}
-          </div>
+                {mFoods.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: '#2a2a2a', fontSize: 11, padding: '10px 0', border: '1px dashed #1a1a1a', borderRadius: 9 }}>— sin registros —</div>
+                ) : (
+                  mFoods.map(f => (
+                    <div key={f.id} style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: 10, padding: '9px 12px', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{f.food_name}</div>
+                        <div style={{ fontSize: 10, color: '#555', marginTop: 1 }}>
+                          <span style={{ color: '#c8ff00' }}>{f.kcal} kcal</span>
+                          {' · '}<span style={{ color: '#4daaff' }}>{f.protein_g}g P</span>
+                          {' · '}<span style={{ color: '#f4a261' }}>{f.carbs_g}g C</span>
+                          {' · '}<span style={{ color: '#ff6b6b' }}>{f.fat_g}g G</span>
+                        </div>
+                      </div>
+                      <button onClick={() => deleteFood(f.id)} style={{ background: 'none', border: 'none', color: '#2a2a2a', cursor: 'pointer', fontSize: 18, padding: '0 4px', flexShrink: 0 }}>✕</button>
+                    </div>
+                  ))
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -1110,7 +1325,7 @@ function NutricionTab({ profile, onProfileSaved }: { profile: Profile; onProfile
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#888', marginBottom: 6 }}>Objetivo</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 {([['def', '🔥 Quemar grasa'], ['mant', '⚖️ Recomposición'], ['vol', '📈 Ganar músculo'], ['agr', '⚡ Déficit agresivo']] as const).map(([v, l]) => (
-                  <button key={v} onClick={() => setGoal(v)} style={{ padding: '10px', background: goal === v ? (v === 'def' || v === 'agr' ? 'rgba(255,77,77,0.1)' : 'rgba(200,255,0,0.08)') : '#1a1a1a', color: goal === v ? (v === 'def' || v === 'agr' ? '#ff4d4d' : '#c8ff00') : '#666', border: `1.5px solid ${goal === v ? (v === 'def' || v === 'agr' ? '#ff4d4d' : '#c8ff00') : '#2a2a2a'}`, borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>{l}</button>
+                  <button key={v} onClick={() => setGoal(v)} style={{ padding: '10px', background: goal === v ? (v === 'def' || v === 'agr' ? 'rgba(255,77,77,0.1)' : 'rgba(200,255,0,0.08)') : '#1a1a1a', color: goal === v ? (v === 'def' || v === 'agr' ? '#ff4d4d' : '#c8ff00') : '#666', border: `1.5px solid ${goal === v ? (v === 'def' || v === 'agr' ? '#ff4d4d' : '#c8ff00') : '#2a2a2a'}`, borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>{v === 'def' ? '🔥 Quemar grasa' : v === 'mant' ? '⚖️ Recomposición' : v === 'vol' ? '📈 Ganar músculo' : '⚡ Déficit agresivo'}</button>
                 ))}
               </div>
             </div>
@@ -1133,7 +1348,6 @@ function NutricionTab({ profile, onProfileSaved }: { profile: Profile; onProfile
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: '#111', border: '1px solid #2a2a2a', color: '#c8ff00', padding: '10px 18px', borderRadius: 9, fontWeight: 700, fontSize: 12, zIndex: 500, whiteSpace: 'nowrap' }}>
           {toast}

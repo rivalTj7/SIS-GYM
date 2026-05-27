@@ -3,7 +3,10 @@
     "allow": [
       "WebFetch(domain:www.youtube.com)",
       "WebSearch",
-      "WebFetch(domain:www.muscleandstrength.com)"
+      "WebFetch(domain:www.muscleandstrength.com)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "mcp__claude_ai_Vercel__list_teams"
     ]
   }
 }
