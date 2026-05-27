@@ -1,13 +1,18 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import Groq from 'groq-sdk';
+import Anthropic from '@anthropic-ai/sdk';
 import { getAuthUserFromRequest } from '@/lib/auth';
 
 const schema = z.object({
   description: z.string().max(500).optional().default(''),
   image: z.string().optional(),
-  mimeType: z.string().optional().default('image/jpeg'),
+  mimeType: z.union([
+    z.literal('image/jpeg'),
+    z.literal('image/png'),
+    z.literal('image/gif'),
+    z.literal('image/webp'),
+  ]).optional().default('image/jpeg'),
   servings: z.number().min(0.25).max(10).default(1),
 });
 
@@ -24,57 +29,53 @@ type FoodEstimate = {
   items: Array<{ name: string; kcal: number; protein_g: number; carbs_g: number; fat_g: number }>;
 };
 
-const JSON_SHAPE = (servings: number) => `{
-  "food_name": "nombre corto del plato",
-  "serving_description": "descripción de la porción",
-  "servings": ${servings},
-  "kcal": 0,
-  "protein_g": 0.0,
-  "carbs_g": 0.0,
-  "fat_g": 0.0,
-  "confidence": "alta",
-  "notes": "nota breve",
-  "items": [{"name":"ingrediente","kcal":0,"protein_g":0,"carbs_g":0,"fat_g":0}]
-}`;
+const SYSTEM_PROMPT = `Eres nutricionista experto en comida latinoamericana y guatemalteca.
+Siempre respondes ÚNICAMENTE con JSON válido, sin markdown, sin texto extra.
+Usa estas referencias de porciones típicas:
+- Tortilla de maíz: ~30g, 70 kcal
+- Huevo mediano: ~50g, 72 kcal
+- Frijoles negros cocidos: 100g, 132 kcal
+- Pan francés: ~50g, 140 kcal
+- Arroz cocido: 100g, 130 kcal
+- Pollo a la plancha: 100g, 165 kcal`;
 
-const TEXT_PROMPT = (desc: string, servings: number) =>
-`Eres nutricionista experto en comida latinoamericana/guatemalteca.
-Comida descrita: "${desc}" — Porciones: ${servings}
+function buildJsonShape(servings: number): string {
+  return JSON.stringify({
+    food_name: 'nombre corto del plato',
+    serving_description: 'descripción de la porción',
+    servings,
+    kcal: 0,
+    protein_g: 0.0,
+    carbs_g: 0.0,
+    fat_g: 0.0,
+    confidence: 'alta',
+    notes: 'nota breve opcional',
+    items: [{ name: 'ingrediente', kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }],
+  }, null, 2);
+}
 
-Devuelve SOLO JSON válido (sin markdown, sin texto extra):
-${JSON_SHAPE(servings)}
+function buildTextPrompt(desc: string, servings: number): string {
+  return `Analiza esta comida y estima sus macronutrientes.
 
-Reglas: tortilla ~30g, huevo mediano ~50g, frijoles ~100g, pan francés ~50g.
-confidence: "alta"=específico, "media"=variaciones posibles, "baja"=muy vago.`;
+Descripción: "${desc}"
+Porciones: ${servings}
 
-const IMAGE_PROMPT = (servings: number) =>
-`Eres nutricionista experto en comida latinoamericana/guatemalteca.
-Analiza esta imagen de comida y estima los macronutrientes de todo lo que ves.
+Devuelve SOLO este JSON con los valores reales (sin markdown):
+${buildJsonShape(servings)}
+
+confidence: "alta" si la descripción es específica, "media" si hay variaciones posibles, "baja" si es muy vaga.`;
+}
+
+function buildImagePrompt(servings: number): string {
+  return `Analiza la imagen de comida y estima los macronutrientes de todo lo que ves.
+
 Porciones visibles: ${servings}
 
-Devuelve SOLO JSON válido (sin markdown, sin texto extra):
-${JSON_SHAPE(servings)}
+Identifica cada componente visible y devuelve SOLO este JSON con los valores reales (sin markdown):
+${buildJsonShape(servings)}
 
-Identifica cada componente visible. Usa referencias GT/latinoamérica.
-confidence: "alta"=comida claramente visible, "media"=partes poco claras, "baja"=imagen poco clara.`;
-
-const DEV_MOCK: FoodEstimate = {
-  food_name: 'Desayuno típico guatemalteco (MODO DEV)',
-  serving_description: '1 plato',
-  servings: 1,
-  kcal: 520,
-  protein_g: 22,
-  carbs_g: 58,
-  fat_g: 18,
-  confidence: 'alta',
-  notes: 'Datos de prueba — modo desarrollo activo',
-  items: [
-    { name: '2 huevos fritos', kcal: 180, protein_g: 12, carbs_g: 1, fat_g: 14 },
-    { name: '2 tortillas de maíz', kcal: 120, protein_g: 3, carbs_g: 26, fat_g: 1 },
-    { name: 'Frijoles negros', kcal: 140, protein_g: 6, carbs_g: 25, fat_g: 1 },
-    { name: 'Pan francés', kcal: 80, protein_g: 1, carbs_g: 6, fat_g: 2 },
-  ],
-};
+confidence: "alta" si la comida está claramente visible, "media" si hay partes poco claras, "baja" si la imagen es poco clara.`;
+}
 
 export async function POST(req: NextRequest) {
   const auth = getAuthUserFromRequest(req);
@@ -88,58 +89,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Se requiere descripción o imagen' }, { status: 400 });
     }
 
-    if (process.env.DEV_MODE === 'true') {
-      await new Promise(r => setTimeout(r, 900));
-      return NextResponse.json({ estimate: { ...DEV_MOCK, servings } });
-    }
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return NextResponse.json({ error: 'ANTHROPIC_API_KEY no configurada' }, { status: 503 });
 
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: 'GROQ_API_KEY no configurada' }, { status: 503 });
+    const client = new Anthropic({ apiKey });
 
-    const client = new Groq({ apiKey });
+    type ContentBlock =
+      | { type: 'text'; text: string }
+      | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'; data: string } };
 
-    let text: string;
+    const content: ContentBlock[] = image
+      ? [
+          { type: 'image', source: { type: 'base64', media_type: mimeType, data: image } },
+          { type: 'text', text: buildImagePrompt(servings) },
+        ]
+      : [{ type: 'text', text: buildTextPrompt(description, servings) }];
 
-    if (image) {
-      // Visión con Llama 4 Scout
-      const completion = await client.chat.completions.create({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image_url',
-                image_url: { url: `data:${mimeType};base64,${image}` },
-              },
-              {
-                type: 'text',
-                text: IMAGE_PROMPT(servings),
-              },
-            ],
-          },
-        ],
-        temperature: 0.2,
-        max_tokens: 1024,
-      });
-      text = completion.choices[0]?.message?.content ?? '';
-    } else {
-      // Solo texto con Llama 3.3
-      const completion = await client.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'user', content: TEXT_PROMPT(description, servings) }],
-        temperature: 0.2,
-        max_tokens: 1024,
-        response_format: { type: 'json_object' },
-      });
-      text = completion.choices[0]?.message?.content ?? '';
-    }
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content }],
+    });
+
+    const rawText = message.content
+      .filter(b => b.type === 'text')
+      .map(b => (b as { type: 'text'; text: string }).text)
+      .join('');
 
     let estimate: FoodEstimate;
     try {
-      estimate = JSON.parse(text.replace(/```json|```/g, '').trim());
+      estimate = JSON.parse(rawText.replace(/```json|```/g, '').trim());
     } catch {
-      console.error('Parse error:', text);
+      console.error('Parse error. Raw response:', rawText);
       return NextResponse.json({ error: 'No se pudo procesar la respuesta de la IA' }, { status: 422 });
     }
 
