@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import Groq from 'groq-sdk';
 import { getAuthUserFromRequest } from '@/lib/auth';
 
 const schema = z.object({
@@ -31,7 +32,7 @@ const JSON_SHAPE = (servings: number) => `{
   "protein_g": 0.0,
   "carbs_g": 0.0,
   "fat_g": 0.0,
-  "confidence": "alta|media|baja",
+  "confidence": "alta",
   "notes": "nota breve",
   "items": [{"name":"ingrediente","kcal":0,"protein_g":0,"carbs_g":0,"fat_g":0}]
 }`;
@@ -46,62 +47,63 @@ ${JSON_SHAPE(servings)}
 Reglas: tortilla ~30g, huevo mediano ~50g, frijoles ~100g, pan francés ~50g.
 confidence: "alta"=específico, "media"=variaciones posibles, "baja"=muy vago.`;
 
-const IMAGE_PROMPT = (servings: number) =>
-`Eres nutricionista experto en comida latinoamericana/guatemalteca.
-Analiza esta imagen de comida y estima los macronutrientes de todo lo que ves.
-Porciones visibles: ${servings}
-
-Devuelve SOLO JSON válido (sin markdown, sin texto extra):
-${JSON_SHAPE(servings)}
-
-Reglas: identifica cada componente visible. Usa referencias GT/latinoamérica.
-confidence: "alta"=comida claramente visible, "media"=partes poco claras, "baja"=imagen poco clara.`;
+const DEV_MOCK: FoodEstimate = {
+  food_name: 'Desayuno típico guatemalteco (MODO DEV)',
+  serving_description: '1 plato',
+  servings: 1,
+  kcal: 520,
+  protein_g: 22,
+  carbs_g: 58,
+  fat_g: 18,
+  confidence: 'alta',
+  notes: 'Datos de prueba — modo desarrollo activo',
+  items: [
+    { name: '2 huevos fritos', kcal: 180, protein_g: 12, carbs_g: 1, fat_g: 14 },
+    { name: '2 tortillas de maíz', kcal: 120, protein_g: 3, carbs_g: 26, fat_g: 1 },
+    { name: 'Frijoles negros', kcal: 140, protein_g: 6, carbs_g: 25, fat_g: 1 },
+    { name: 'Pan francés', kcal: 80, protein_g: 1, carbs_g: 6, fat_g: 2 },
+  ],
+};
 
 export async function POST(req: NextRequest) {
   const auth = getAuthUserFromRequest(req);
   if (!auth) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: 'GEMINI_API_KEY no configurada' }, { status: 503 });
-
   try {
     const body = await req.json();
-    const { description, image, mimeType, servings } = schema.parse(body);
+    const { description, servings } = schema.parse(body);
 
-    if (!description && !image) {
-      return NextResponse.json({ error: 'Se requiere descripción o imagen' }, { status: 400 });
+    if (!description) {
+      return NextResponse.json({ error: 'Se requiere descripción' }, { status: 400 });
     }
 
-    const parts: any[] = image
-      ? [{ inline_data: { mime_type: mimeType, data: image } }, { text: IMAGE_PROMPT(servings) }]
-      : [{ text: TEXT_PROMPT(description, servings) }];
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1024, responseMimeType: 'application/json' },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      console.error('Gemini error:', await response.text());
-      return NextResponse.json({ error: 'Error al consultar Gemini' }, { status: 502 });
+    // Modo desarrollo: retorna datos mock sin llamar a la IA
+    if (process.env.DEV_MODE === 'true') {
+      await new Promise(r => setTimeout(r, 800));
+      return NextResponse.json({ estimate: { ...DEV_MOCK, servings } });
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) return NextResponse.json({ error: 'GROQ_API_KEY no configurada' }, { status: 503 });
+
+    const client = new Groq({ apiKey });
+
+    const completion = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: TEXT_PROMPT(description, servings) }],
+      temperature: 0.2,
+      max_tokens: 1024,
+      response_format: { type: 'json_object' },
+    });
+
+    const text = completion.choices[0]?.message?.content ?? '';
 
     let estimate: FoodEstimate;
     try {
-      estimate = JSON.parse(text.replace(/```json|```/g, '').trim());
+      estimate = JSON.parse(text);
     } catch {
       console.error('Parse error:', text);
-      return NextResponse.json({ error: 'No se pudo procesar la respuesta' }, { status: 422 });
+      return NextResponse.json({ error: 'No se pudo procesar la respuesta de la IA' }, { status: 422 });
     }
 
     if (!estimate.kcal || !estimate.food_name) {
