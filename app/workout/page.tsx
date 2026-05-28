@@ -4,23 +4,145 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import BottomNav from '@/components/BottomNav';
 
-const DAY_NAMES = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
-const REST_IDX = 6;
+// ─────────────────────────────────────────────────────────────
+// BURN GT PRO — SPLIT PPL × 2 (Push / Pull / Legs)
+// LUN: Push A  · MAR: Pull A  · MIÉ: Legs A
+// JUE: Push B  · VIE: Pull B  · SÁB: Legs B + Core  · DOM: Rest
+// ─────────────────────────────────────────────────────────────
 
-const GYM = [
-  { name: 'Shoulder Press (Máquina)', sets: 4, reps: '10–12', videoId: 'qEwKCR5JCog', tip: 'Espalda pegada al respaldo. Empuja sin bloquear codos. Baja controlado 2–3 seg.' },
-  { name: 'Press de Banca', sets: 4, reps: '10', videoId: 'rT7DgCr-3pg', tip: 'Agarre más ancho que hombros. Baja hasta rozar el pecho. Escápulas retraídas.' },
-  { name: 'Jalón al Pecho (Polea)', sets: 4, reps: '12', videoId: 'CAwf7n6Luuc', tip: 'Baja al pecho, inclina 15° atrás. Junta escápulas al final.' },
-  { name: 'Remo con Mancuerna', sets: 3, reps: '12 x brazo', videoId: 'roCP6wCXPqo', tip: 'Apoya rodilla y mano. Lleva el codo hacia el techo, contrae espalda.' },
-  { name: 'Prensa de Piernas', sets: 4, reps: '12', videoId: 'GvRgijoJ2xY', tip: '¡Esto quema más calorías! Pies al ancho de hombros, baja 90°.' },
+type Ex = { name: string; sets: string; reps: string; rest: number; videoId: string; tip: string; muscle: string };
+type Day = { day: string; label: string; focus: string; rest: boolean; gym: Ex[]; home: Ex[] };
+
+const PLAN: Day[] = [
+
+  // ── LUN — PUSH A ─────────────────────────────────────────
+  {
+    day: 'LUN', label: 'PUSH A', focus: 'Pecho · Hombros · Tríceps', rest: false,
+    gym: [
+      { name: 'Press de Banca con Barra',       sets: '4', reps: '5–6',   rest: 180, videoId: 'rT7DgCr-3pg', muscle: 'Pecho',            tip: 'Escápulas retraídas y fijas. Barra baja hasta rozar el pecho. Empuje explosivo sin rebotar.' },
+      { name: 'Press Inclinado Mancuernas',      sets: '4', reps: '8–10',  rest: 90,  videoId: '8iPEnn-ltC8', muscle: 'Pecho superior',   tip: 'Banco a 30°, no más. Baja hasta sentir el estiramiento del pecho superior. No rebotes abajo.' },
+      { name: 'Press Arnold',                    sets: '3', reps: '10–12', rest: 75,  videoId: 'qEwKCR5JCog', muscle: 'Hombros',          tip: 'Empieza palmas hacia ti, gira al empujar. Activa las 3 cabezas del deltoides en un solo movimiento.' },
+      { name: 'Elevaciones Laterales en Cable',  sets: '4', reps: '15–20', rest: 45,  videoId: 'FeJbvGm_09k', muscle: 'Deltoides lateral', tip: 'Sube solo hasta paralelo. Baja en 2 seg. La polea mantiene tensión en todo el rango, mejor que mancuernas.' },
+      { name: 'Extensión en Polea (cuerda)',     sets: '3', reps: '12–15', rest: 60,  videoId: 'vB5OHsJ3EMc', muscle: 'Tríceps',          tip: 'Codos pegados al cuerpo. Separa la cuerda al final para máxima contracción. No permitas que los codos se muevan.' },
+    ],
+    home: [
+      { name: 'Flexiones con Pausa 3-1-1',             sets: '4', reps: '10–15', rest: 90, videoId: 'IODxDxX7oi4', muscle: 'Pecho',            tip: 'Baja en 3 seg, pausa 1 seg en el fondo, explota al subir. El tempo multiplica el estímulo sin añadir peso.' },
+      { name: 'Flexiones Inclinadas (pies en silla)',   sets: '3', reps: '10–12', rest: 75, videoId: 'IODxDxX7oi4', muscle: 'Pecho superior',   tip: 'Pies en silla a 45 cm. Activa el pecho superior exactamente igual que el press inclinado.' },
+      { name: 'Pike Push-ups (pies elevados)',          sets: '4', reps: '10–12', rest: 75, videoId: 'sposDXWEB0A', muscle: 'Hombros',          tip: 'Caderas altas formando una V. Cabeza baja entre los brazos. Equivale al press militar con carga corporal.' },
+      { name: 'Elevaciones Laterales con Botellas',     sets: '3', reps: '20',    rest: 45, videoId: 'FeJbvGm_09k', muscle: 'Deltoides lateral', tip: 'Botellas de 1.5L. Sube hasta paralelo. Baja en 2 seg. 20 reps compensan el peso bajo con más volumen.' },
+      { name: 'Dips en Silla',                          sets: '3', reps: '12–15', rest: 60, videoId: 'l4kQd9eWclE', muscle: 'Tríceps',          tip: 'Cuerpo completamente vertical para atacar el tríceps. Baja hasta 90°. Si te inclinas adelante activa el pecho.' },
+    ],
+  },
+
+  // ── MAR — PULL A ─────────────────────────────────────────
+  {
+    day: 'MAR', label: 'PULL A', focus: 'Espalda · Bíceps', rest: false,
+    gym: [
+      { name: 'Dominadas (o Jalón al Pecho)',    sets: '4', reps: 'al fallo (mín 4)', rest: 180, videoId: 'eGo4IYlbE5g', muscle: 'Dorsal',       tip: 'Baja hasta extensión completa. Lleva el pecho a la barra. Si haces +8 reps, añade lastre para progresar.' },
+      { name: 'Remo con Barra (Bent-Over Row)',   sets: '4', reps: '8–10',            rest: 90,  videoId: 'GZbfZ033f74', muscle: 'Espalda media', tip: 'Torso a 45°. Barra toca el abdomen bajo. No uses inercia del torso. Controlá la bajada en 2 seg.' },
+      { name: 'Jalón al Pecho Agarre Neutro',     sets: '3', reps: '10–12',           rest: 75,  videoId: 'CAwf7n6Luuc', muscle: 'Dorsal',        tip: 'Palmas enfrentadas. Inclina el torso 15° atrás al bajar. Junta las escápulas al final del movimiento.' },
+      { name: 'Curl con Barra de Pie',            sets: '3', reps: '8–10',            rest: 75,  videoId: 'av7-8igSXTs', muscle: 'Bíceps',        tip: 'Codos fijos al costado del torso. Rango completo. Baja en 3 seg. Sin balancear el cuerpo.' },
+      { name: 'Curl Martillo con Mancuernas',     sets: '3', reps: '10–12',           rest: 60,  videoId: 'TwD-YGVP4Bk', muscle: 'Braquial',      tip: 'Agarre neutro (pulgar arriba). Trabaja el braquial que da grosor al brazo. Codos completamente fijos.' },
+    ],
+    home: [
+      { name: 'Dominadas o Inverted Row',         sets: '4', reps: 'al fallo / 12',  rest: 120, videoId: 'eGo4IYlbE5g', muscle: 'Dorsal',        tip: 'Usá lo que tengas disponible. Rango completo siempre. En inverted row: más horizontal = más difícil.' },
+      { name: 'Remo con Mochila Unilateral',       sets: '4', reps: '12 × lado',      rest: 75,  videoId: 'roCP6wCXPqo', muscle: 'Espalda media',  tip: 'Mochila con libros. Lleva el codo al techo. Contrae la espalda 1 seg en el tope antes de bajar.' },
+      { name: 'Superman con Pausa',                sets: '3', reps: '15',             rest: 45,  videoId: 'z6PJMT2y8GQ', muscle: 'Espalda baja',   tip: 'Boca abajo, sube brazos y piernas simultáneamente. Mantén 2 seg. Activa toda la cadena posterior.' },
+      { name: 'Curl con Mochila',                  sets: '3', reps: '12–15',          rest: 60,  videoId: 'av7-8igSXTs', muscle: 'Bíceps',         tip: 'Codos fijos al cuerpo. Gira la muñeca al subir. Baja en 3 seg para más estímulo sin más peso.' },
+      { name: 'Curl Inverso con Botella',          sets: '3', reps: '15–20',          rest: 45,  videoId: 'TwD-YGVP4Bk', muscle: 'Antebrazo',      tip: 'Agarre con el dorso de la mano hacia arriba. Trabaja el braquiorradial y los extensores del antebrazo.' },
+    ],
+  },
+
+  // ── MIÉ — LEGS A ─────────────────────────────────────────
+  {
+    day: 'MIÉ', label: 'LEGS A', focus: 'Cuádriceps · Glúteos · Pantorrillas', rest: false,
+    gym: [
+      { name: 'Sentadilla con Barra',             sets: '4', reps: '5–8',   rest: 180, videoId: 'ultWZbUMPL8', muscle: 'Cuádriceps',     tip: 'Pecho arriba, rodillas siguen los pies. Baja hasta paralelo o más profundo. La profundidad activa más glúteo.' },
+      { name: 'Prensa de Piernas',                sets: '4', reps: '10–12', rest: 90,  videoId: 'GvRgijoJ2xY', muscle: 'Cuádriceps',     tip: 'Pies al ancho de hombros. Baja hasta 90°. No despegues la espalda baja. No bloquees rodillas arriba.' },
+      { name: 'Hip Thrust con Barra',             sets: '4', reps: '10–12', rest: 90,  videoId: 'SEdqd1n0cvg', muscle: 'Glúteos',        tip: 'Espalda sobre el banco. Empuja desde los talones. Contrae el glúteo 2 seg arriba. No hiperextendas la espalda baja.' },
+      { name: 'Curl de Isquiotibiales (máquina)', sets: '3', reps: '12',    rest: 60,  videoId: 'Orxowest56U', muscle: 'Isquiotibiales', tip: 'Baja en 3 seg, el músculo crece más en la fase excéntrica. Extensión completa entre repeticiones.' },
+      { name: 'Pantorrillas de Pie (con barra)',  sets: '4', reps: '15–20', rest: 45,  videoId: 'gwLzBJYoWlQ', muscle: 'Pantorrillas',   tip: 'Rango completo: talón abajo del borde, punta al máximo arriba. Pausa 2 seg en el tope.' },
+    ],
+    home: [
+      { name: 'Sentadilla Búlgara',               sets: '4', reps: '10 × pierna', rest: 90, videoId: 'QOVaHwm-Q6U', muscle: 'Cuádriceps / Glúteos', tip: 'Pie trasero en silla. Para más glúteo, inclina levemente el torso al frente. Bajada controlada en 3 seg.' },
+      { name: 'Hip Thrust Elevado (sofá)',         sets: '4', reps: '15–20',       rest: 75, videoId: 'OUgsJ8-Vi0E', muscle: 'Glúteos',               tip: 'Hombros en el borde del sofá. Pausa 2 seg arriba con glúteo contraído. Empuja siempre desde los talones.' },
+      { name: 'Sentadilla con Salto',              sets: '3', reps: '15',          rest: 60, videoId: 'CVaEhXotL7M', muscle: 'Cuádriceps / Cardio',    tip: 'Profundidad completa en cada repetición. Explosión total al subir. Aterriza con rodillas dobladas.' },
+      { name: 'Zancadas Alternadas',               sets: '3', reps: '20 pasos',    rest: 60, videoId: 'QOVaHwm-Q6U', muscle: 'Cuádriceps / Glúteos',   tip: '10 pasos por pierna. Rodilla trasera casi toca el suelo. Torso erguido y estable durante todo.' },
+      { name: 'Pantorrillas en Escalón',           sets: '4', reps: '20',          rest: 30, videoId: 'gwLzBJYoWlQ', muscle: 'Pantorrillas',            tip: 'Rango completo obligatorio. Pausa 2 seg arriba. Talón abajo del nivel entre repeticiones.' },
+    ],
+  },
+
+  // ── JUE — PUSH B ─────────────────────────────────────────
+  {
+    day: 'JUE', label: 'PUSH B', focus: 'Pecho · Hombros · Tríceps (variantes)', rest: false,
+    gym: [
+      { name: 'Press Banca Inclinado con Barra',  sets: '4', reps: '8–12',  rest: 120, videoId: '8iPEnn-ltC8', muscle: 'Pecho superior',    tip: 'Banco a 30°. Barra baja a la parte alta del pecho. Más de 45° activa más hombro que pecho.' },
+      { name: 'Press Banca con Mancuernas',       sets: '4', reps: '10–12', rest: 90,  videoId: 'rT7DgCr-3pg', muscle: 'Pecho',             tip: 'Mayor rango que la barra. Baja hasta sentir el estiramiento completo del pecho en cada repetición.' },
+      { name: 'Elevaciones Laterales Mancuernas', sets: '4', reps: '12–15', rest: 45,  videoId: 'FeJbvGm_09k', muscle: 'Deltoides lateral',  tip: 'Sube hasta paralelo. Baja en 2 seg. Sin impulso. La diferencia vs el lunes: mancuerna en lugar de cable.' },
+      { name: 'Pájaros Inversos (Reverse Fly)',   sets: '3', reps: '15',    rest: 45,  videoId: 'HSoHeSjvIdY', muscle: 'Deltoides posterior', tip: 'Torso inclinado a 45°. Codos ligeramente doblados. Fija los codos y mueve solo el hombro.' },
+      { name: 'Press Francés con Barra EZ',       sets: '3', reps: '10–12', rest: 60,  videoId: 'vB5OHsJ3EMc', muscle: 'Tríceps',            tip: 'Codos apuntan al techo todo el tiempo. Baja hasta la frente. No los abras hacia los lados.' },
+    ],
+    home: [
+      { name: 'Flexiones Explosivas (Clapping)',    sets: '4', reps: '8',       rest: 90, videoId: 'IODxDxX7oi4', muscle: 'Pecho / Potencia',  tip: 'Explosión máxima al subir. Si no podés palmear: flexiones normales lo más rápido posible.' },
+      { name: 'Flexiones Diamante',                 sets: '4', reps: '10–15',   rest: 75, videoId: 'IODxDxX7oi4', muscle: 'Tríceps / Pecho',   tip: 'Manos formando diamante bajo el pecho. Activa el pecho interno y el tríceps con más énfasis.' },
+      { name: 'Flexiones Declinadas (pies en silla)', sets: '3', reps: '12',    rest: 60, videoId: 'IODxDxX7oi4', muscle: 'Pecho superior',    tip: 'Pies elevados en silla. El ángulo activa el pecho superior igual que el press inclinado.' },
+      { name: 'Pike Push-ups Lentos (3-1-3)',       sets: '3', reps: '10',      rest: 75, videoId: 'sposDXWEB0A', muscle: 'Hombros',            tip: 'Baja en 3 seg, pausa 1 seg abajo, sube en 3 seg. El tempo convierte un ejercicio fácil en difícil.' },
+      { name: 'Dips en Silla al Fallo',             sets: '3', reps: 'al fallo', rest: 75, videoId: 'l4kQd9eWclE', muscle: 'Tríceps',           tip: 'Cuerpo vertical. Al fallo real y controlado. Para progresar: eleva los pies en otra silla.' },
+    ],
+  },
+
+  // ── VIE — PULL B ─────────────────────────────────────────
+  {
+    day: 'VIE', label: 'PULL B', focus: 'Espalda · Bíceps (variantes)', rest: false,
+    gym: [
+      { name: 'Dominadas al Fallo',               sets: '4', reps: 'al fallo', rest: 180, videoId: 'eGo4IYlbE5g', muscle: 'Dorsal',        tip: 'Segunda sesión semanal. Si mejorás aunque sea 1 rep respecto al lunes, la semana fue exitosa.' },
+      { name: 'Remo con Mancuerna',               sets: '4', reps: '10–12 × lado', rest: 75, videoId: 'roCP6wCXPqo', muscle: 'Espalda media', tip: 'Codo al techo. Contrae la espalda en el tope 1 seg. Sin rotar el torso al jalar.' },
+      { name: 'Pullover en Cable',                sets: '3', reps: '12–15',    rest: 60,  videoId: 'FK4jEXqJHZA', muscle: 'Dorsal',        tip: 'Polea alta, brazos casi rectos. Jala hacia abajo activando el dorsal. Tensión constante todo el rango.' },
+      { name: 'Curl Inclinado con Mancuernas',    sets: '3', reps: '10–12',    rest: 75,  videoId: 'av7-8igSXTs', muscle: 'Bíceps',        tip: 'Banco a 45°. Los brazos cuelgan por detrás del cuerpo. Máximo estiramiento del bíceps al inicio.' },
+      { name: 'Curl Concentrado',                 sets: '3', reps: '12 × lado', rest: 45,  videoId: 'BZFgeQfOCGE', muscle: 'Bíceps',        tip: 'Codo apoyado en la rodilla. Aislamiento total. Contrae 1 seg arriba. Sin compensar con el torso.' },
+    ],
+    home: [
+      { name: 'Dominadas con Pausa 1 seg',        sets: '4', reps: 'máx con pausa', rest: 120, videoId: 'eGo4IYlbE5g', muscle: 'Dorsal',        tip: 'La pausa de 1 seg arriba multiplica el estímulo aunque hagas menos reps totales.' },
+      { name: 'Remo con Mochila Bilateral',        sets: '4', reps: '12',            rest: 75,  videoId: 'roCP6wCXPqo', muscle: 'Espalda media',  tip: 'Mochila pesada. Torso a 45°. Jala al abdomen bajo. Sin inercia del torso.' },
+      { name: 'Superman Isométrico',              sets: '3', reps: '30 seg',         rest: 45,  videoId: 'z6PJMT2y8GQ', muscle: 'Espalda baja',   tip: 'Sube y mantén la posición. Activa la cadena posterior completa de manera isométrica.' },
+      { name: 'Curl con Mochila 21s',             sets: '3', reps: '21 (7+7+7)',     rest: 90,  videoId: 'av7-8igSXTs', muscle: 'Bíceps',         tip: '7 reps mitad inferior + 7 mitad superior + 7 rango completo. Sin descanso entre las 3 fases.' },
+      { name: 'Curl Inverso con Botella',         sets: '3', reps: '15–20',          rest: 45,  videoId: 'TwD-YGVP4Bk', muscle: 'Antebrazo',      tip: 'Agarre invertido. Trabaja el braquiorradial. Codos completamente fijos al cuerpo.' },
+    ],
+  },
+
+  // ── SÁB — LEGS B + CORE ──────────────────────────────────
+  {
+    day: 'SÁB', label: 'LEGS B + CORE', focus: 'Isquiotibiales · Glúteos · Core', rest: false,
+    gym: [
+      { name: 'Peso Muerto Rumano (RDL)',          sets: '4', reps: '10–12', rest: 90, videoId: 'op9kVnSso6Q', muscle: 'Isquiotibiales', tip: 'Bisagra de cadera pura. Baja hasta sentir el jalón en los isquios. Rodillas ligeramente dobladas y fijas.' },
+      { name: 'Curl de Isquiotibiales Máquina',    sets: '4', reps: '10–12', rest: 75, videoId: 'Orxowest56U', muscle: 'Isquiotibiales', tip: 'Baja en 3 seg. El músculo crece más bajando lento. Extensión completa entre cada repetición.' },
+      { name: 'Sentadilla Búlgara c/ Mancuernas',  sets: '3', reps: '10 × pierna', rest: 90, videoId: 'QOVaHwm-Q6U', muscle: 'Glúteos',     tip: 'Pie trasero en banco. Inclina levemente el torso para énfasis en glúteo. Control total en la bajada.' },
+      { name: 'Rueda Abdominal (Ab Wheel)',         sets: '4', reps: '8–12',  rest: 60, videoId: 'AhGCpbPf77U', muscle: 'Core',           tip: 'Desde rodillas. Extiende sin arquear la espalda baja. Vuelve contrayendo el abdomen, no jalando con los brazos.' },
+      { name: 'Plancha RKC',                       sets: '3', reps: '45 seg', rest: 45, videoId: 'ASdvN_XEl_c', muscle: 'Core',           tip: 'Aprieta glúteos + abdomen + cuádriceps al máximo simultáneamente. Es radicalmente más difícil que la plancha normal.' },
+    ],
+    home: [
+      { name: 'Nordic Curl (pies bajo sofá)',       sets: '4', reps: '6–8',          rest: 120, videoId: '0Njz2FBOJIE', muscle: 'Isquiotibiales', tip: 'El ejercicio #1 de isquios sin máquina. Baja LENTO (5–10 seg). Usa las manos para subir.' },
+      { name: 'Hip Thrust Elevado Pausa 3s',        sets: '4', reps: '15',           rest: 75,  videoId: 'SEdqd1n0cvg', muscle: 'Glúteos',         tip: 'Hombros en el sofá. Pausa 3 seg arriba. Sin pausa es solo movimiento; con pausa es trabajo real.' },
+      { name: 'Sentadilla Búlgara',                 sets: '3', reps: '10 × pierna',  rest: 75,  videoId: 'QOVaHwm-Q6U', muscle: 'Glúteos',         tip: 'Pie trasero en silla. Bajada en 3 seg. Si es fácil, usa mochila como contrapeso.' },
+      { name: 'Dead Bug',                           sets: '3', reps: '10 × lado',    rest: 60,  videoId: 'g_BYB0R-4Ws', muscle: 'Core',            tip: 'Espalda PEGADA al suelo en todo momento. Si se arquea, reduce el rango de movimiento.' },
+      { name: 'Plancha RKC',                        sets: '3', reps: '40 seg',       rest: 45,  videoId: 'ASdvN_XEl_c', muscle: 'Core',            tip: 'Aprieta glúteos + abdomen + cuádriceps al máximo. 40 seg de esto equivale a 2 min de plancha normal.' },
+    ],
+  },
+
+  // ── DOM — REST ───────────────────────────────────────────
+  {
+    day: 'DOM', label: 'DESCANSO', focus: 'Recuperación activa', rest: true,
+    gym: [], home: [],
+  },
 ];
 
-const HOME = [
-  { name: 'Burpees', sets: 4, reps: '15 reps', videoId: 'dZgVxmf6jkA', tip: 'Plancha → flexión → salto explosivo. Mantén el ritmo.' },
-  { name: 'Flexiones (Push-ups)', sets: 4, reps: '45 seg máx', videoId: 'IODxDxX7oi4', tip: 'Cuerpo recto. Pecho roza el suelo. Si fallas la forma, rodillas en tierra.' },
-  { name: 'Zancadas (Lunges)', sets: 4, reps: '20 pasos', videoId: 'QOVaHwm-Q6U', tip: '10 por pierna. Rodilla trasera casi toca el suelo. Torso erguido.' },
-  { name: 'Mountain Climbers', sets: 4, reps: '45 seg máx', videoId: 'nmwgirgXLYM', tip: 'Plancha alta. Lleva rodillas al pecho alternando. Caderas abajo.' },
-  { name: 'Plancha Abdominal', sets: 4, reps: '1 min', videoId: 'ASdvN_XEl_c', tip: 'Codos bajo hombros. Contrae abdomen y glúteos. Respira.' },
+const REST_ACTIVITIES = [
+  '🔄 Rotaciones articulares completas · 5 min',
+  '🦵 Estiramiento isquios y cuádriceps · 45 seg × lado',
+  '🌊 Cobra + Child\'s Pose · 60 seg cada uno',
+  '🚶 Caminata suave 20–30 min (sin apuro)',
+  '💧 Hidratación alta · mínimo 3L de agua',
+  '😴 Priorizá 8 horas de sueño esta noche',
 ];
 
 const CIRCUMFERENCE = 175.9;
@@ -32,7 +154,7 @@ export default function WorkoutPage() {
   const todayIdx = (new Date().getDay() + 6) % 7;
   const [selectedDay, setSelectedDay] = useState(todayIdx);
   const [dayMode, setDayMode] = useState<'gym' | 'home' | null>(null);
-  const [showModeModal, setShowModeModal] = useState(todayIdx !== REST_IDX);
+  const [showModeModal, setShowModeModal] = useState(todayIdx !== 6);
   const [completed, setCompleted] = useState<Record<number, boolean>>({});
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
@@ -64,7 +186,7 @@ export default function WorkoutPage() {
     setTimerRunning(false);
     setTimerRemaining(timerTotal);
     loadDay(selectedDay);
-    if (selectedDay !== REST_IDX) setShowModeModal(true);
+    if (!PLAN[selectedDay].rest) setShowModeModal(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDay]);
 
@@ -162,10 +284,11 @@ export default function WorkoutPage() {
     setSaving(true);
     try {
       const dateStr = new Date().toISOString().slice(0, 10);
+      const dayPlan = PLAN[selectedDay];
       const sRes = await fetch('/api/workouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ day_key: DAY_NAMES[selectedDay], split_type: dayMode, mode: dayMode === 'gym' ? 'gym' : 'casa', session_date: dateStr }),
+        body: JSON.stringify({ day_key: dayPlan.day, split_type: dayPlan.label, mode: dayMode === 'gym' ? 'gym' : 'casa', session_date: dateStr }),
       });
       if (sRes.ok) {
         const { session } = await sRes.json();
@@ -185,8 +308,8 @@ export default function WorkoutPage() {
     showToast('🏆 ¡SESIÓN COMPLETADA! Eres un beast.');
   }
 
-  const isRest = selectedDay === REST_IDX;
-  const exercises = dayMode === 'gym' ? GYM : dayMode === 'home' ? HOME : [];
+  const dayPlan = PLAN[selectedDay];
+  const exercises: Ex[] = dayMode === 'gym' ? dayPlan.gym : dayMode === 'home' ? dayPlan.home : [];
   const accent = dayMode === 'home' ? '#ff6b35' : '#e8ff47';
   const doneCount = exercises.filter((_, i) => completed[i]).length;
   const pct = exercises.length > 0 ? Math.round((doneCount / exercises.length) * 100) : 0;
@@ -199,55 +322,62 @@ export default function WorkoutPage() {
 
   return (
     <div className="page-root">
-      {/* Header */}
+
+      {/* ── Header ── */}
       <div style={{ padding: '24px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="font-bebas" style={{ fontSize: 28, letterSpacing: 3, color: '#e8ff47' }}>PLAN DE BATALLA</div>
+        <div>
+          <div className="font-bebas" style={{ fontSize: 30, letterSpacing: 3, color: '#e8ff47' }}>
+            {dayPlan.label}
+          </div>
+          <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>{dayPlan.focus}</div>
+        </div>
         <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: 6, padding: '6px 12px', fontSize: 11, fontWeight: 700, letterSpacing: 1, color: '#666', textTransform: 'uppercase' }}>
           {['LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO','DOMINGO'][selectedDay]}
         </div>
       </div>
 
-      {/* Week strip */}
-      <div style={{ padding: '20px 20px 0', display: 'flex', gap: 8, overflowX: 'auto' }}>
-        {DAY_NAMES.map((name, i) => {
+      {/* ── Day strip ── */}
+      <div style={{ padding: '16px 20px 0', display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
+        {PLAN.map((d, i) => {
           const isSelected = i === selectedDay;
           const isToday = i === todayIdx;
-          const isRestDay = i === REST_IDX;
           return (
             <button key={i} onClick={() => setSelectedDay(i)} style={{
               flexShrink: 0, minWidth: 56,
               background: isSelected ? 'rgba(232,255,71,0.08)' : '#111',
               border: `1.5px solid ${isSelected ? '#e8ff47' : isToday ? 'rgba(255,255,255,0.2)' : '#2a2a2a'}`,
-              borderRadius: 12, padding: '10px 14px', textAlign: 'center', cursor: 'pointer',
-              opacity: isRestDay ? 0.5 : 1,
+              borderRadius: 12, padding: '10px 8px', textAlign: 'center', cursor: 'pointer',
+              opacity: d.rest ? 0.5 : 1,
             }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: isSelected ? '#e8ff47' : '#666' }}>{name}</div>
-              <div style={{ fontSize: 18, marginTop: 4 }}>{isRestDay ? '😴' : '🏋️'}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: isSelected ? '#e8ff47' : '#666' }}>{d.day}</div>
+              <div style={{ fontSize: 16, marginTop: 4 }}>{d.rest ? '😴' : '🏋️'}</div>
             </button>
           );
         })}
       </div>
 
-      {/* Gym/Casa modal */}
-      {showModeModal && !isRest && (
+      {/* ── Gym / Casa modal ── */}
+      {showModeModal && !dayPlan.rest && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.96)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#666', marginBottom: 8 }}>SESIÓN — {DAY_NAMES[selectedDay]}</div>
-          <div className="font-bebas" style={{ fontSize: 36, letterSpacing: 2, marginBottom: 8, textAlign: 'center', color: '#f2f0ea' }}>¿VAS AL GYM HOY?</div>
-          <div style={{ fontSize: 14, color: '#666', marginBottom: 32, textAlign: 'center', maxWidth: 280 }}>
-            Elegí tu rutina. Podés cambiarla después.
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#666', marginBottom: 8 }}>
+            SESIÓN — {dayPlan.day}
+          </div>
+          <div className="font-bebas" style={{ fontSize: 34, letterSpacing: 2, marginBottom: 4, textAlign: 'center', color: '#f2f0ea' }}>
+            {dayPlan.label}
+          </div>
+          <div style={{ fontSize: 12, color: '#555', marginBottom: 32, textAlign: 'center' }}>
+            {dayPlan.focus}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 320 }}>
             <button onClick={() => { setDayMode('gym'); setShowModeModal(false); }} style={{
               background: '#e8ff47', color: '#000', border: 'none', borderRadius: 14, padding: '20px',
               fontFamily: 'var(--font-bebas, sans-serif)', fontSize: 20, letterSpacing: 3, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             }}>
               🏛️ SÍ, VOY AL GYM
             </button>
             <button onClick={() => { setDayMode('home'); setShowModeModal(false); }} style={{
               background: '#1a1a1a', color: '#ff6b35', border: '1.5px solid #ff6b35', borderRadius: 14, padding: '20px',
               fontFamily: 'var(--font-bebas, sans-serif)', fontSize: 20, letterSpacing: 3, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             }}>
               🏠 NO, ME QUEDO EN CASA
             </button>
@@ -258,31 +388,45 @@ export default function WorkoutPage() {
         </div>
       )}
 
-      {isRest ? (
-        <div style={{ margin: '48px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 56 }}>🛌</div>
-          <div className="font-bebas" style={{ fontSize: 36, letterSpacing: 2, marginTop: 16 }}>DÍA DE DESCANSO</div>
-          <div style={{ color: '#666', fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
-            El músculo crece cuando descansas.<br />Camina suave o simplemente relájate.
+      {/* ── Rest day ── */}
+      {dayPlan.rest && (
+        <div style={{ margin: '40px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: 56 }}>🧘</div>
+          <div className="font-bebas" style={{ fontSize: 36, letterSpacing: 2, marginTop: 16, color: '#3ddc84' }}>DESCANSO ACTIVO</div>
+          <div style={{ color: '#666', fontSize: 13, marginTop: 8, lineHeight: 1.7, marginBottom: 24 }}>
+            El músculo crece y la grasa se metaboliza durante el descanso.<br />No lo saltés — es parte del plan.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {REST_ACTIVITIES.map(item => (
+              <div key={item} style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: 10, padding: '11px 14px', textAlign: 'left', fontSize: 13 }}>
+                {item}
+              </div>
+            ))}
           </div>
         </div>
-      ) : !dayMode ? (
+      )}
+
+      {/* ── No mode selected ── */}
+      {!dayPlan.rest && !dayMode && (
         <div style={{ margin: '40px 20px', textAlign: 'center' }}>
           <div style={{ color: '#555', fontSize: 14, marginBottom: 20 }}>Elegí tu modo para ver la rutina de hoy.</div>
           <button onClick={() => setShowModeModal(true)} style={{ background: '#e8ff47', color: '#000', border: 'none', borderRadius: 10, padding: '14px 28px', fontFamily: 'var(--font-bebas, sans-serif)', fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>
             ELEGIR MODO
           </button>
         </div>
-      ) : (
+      )}
+
+      {/* ── Session ── */}
+      {!dayPlan.rest && dayMode && (
         <>
-          {/* Session badge */}
-          <div style={{ margin: '20px 20px 0', display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Mode badge + change */}
+          <div style={{ margin: '16px 20px 0', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               fontFamily: 'var(--font-bebas, sans-serif)', fontSize: 13, letterSpacing: 2,
               padding: '6px 14px', borderRadius: 6, border: `1.5px solid ${accent}`, color: accent,
               background: dayMode === 'gym' ? 'rgba(232,255,71,0.06)' : 'rgba(255,107,53,0.06)',
             }}>
-              {dayMode === 'gym' ? '🏛️ GYM — FUERZA' : '🔥 CASA — QUEMA-GRASA'}
+              {dayMode === 'gym' ? '🏛️ GYM' : '🔥 CASA'}
             </div>
             <button onClick={() => setShowModeModal(true)} style={{ background: 'none', border: '1px solid #2a2a2a', color: '#555', borderRadius: 7, padding: '5px 10px', fontSize: 11, cursor: 'pointer' }}>
               Cambiar
@@ -290,7 +434,7 @@ export default function WorkoutPage() {
           </div>
 
           {/* Timer */}
-          <div style={{ margin: '20px 20px 0', background: '#181818', border: '1.5px solid #2a2a2a', borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ margin: '16px 20px 0', background: '#181818', border: '1.5px solid #2a2a2a', borderRadius: 16, padding: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#666', marginBottom: 6 }}>DESCANSO ENTRE SERIES</div>
               <div className="font-bebas" style={{ fontSize: 48, letterSpacing: 2, lineHeight: 1, color: timerRemaining <= 10 && timerRunning ? '#ff6b35' : '#e8ff47' }}>
@@ -321,7 +465,7 @@ export default function WorkoutPage() {
               <button key={s} onClick={() => setPreset(s)} style={{
                 flex: 1, background: timerTotal === s ? 'rgba(232,255,71,0.05)' : '#111',
                 border: `1.5px solid ${timerTotal === s ? '#e8ff47' : '#2a2a2a'}`,
-                color: timerTotal === s ? '#e8ff47' : '#f2f0ea',
+                color: timerTotal === s ? '#e8ff47' : '#888',
                 borderRadius: 8, padding: '8px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer',
               }}>
                 {s < 120 ? `${s}s` : `${s / 60}min`}
@@ -330,20 +474,20 @@ export default function WorkoutPage() {
           </div>
 
           {/* Progress */}
-          <div style={{ margin: '20px 20px 0' }}>
+          <div style={{ margin: '18px 20px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div className="section-label">PROGRESO SESIÓN</div>
-              <div className="font-bebas" style={{ fontSize: 20, color: '#e8ff47' }}>{pct}%</div>
+              <div className="font-bebas" style={{ fontSize: 22, color: '#e8ff47' }}>{pct}%</div>
             </div>
-            <div style={{ background: '#111', borderRadius: 4, height: 6, overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: '#e8ff47', width: `${pct}%`, borderRadius: 4, transition: 'width 0.4s' }} />
+            <div style={{ background: '#111', borderRadius: 4, height: 5, overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: '#e8ff47', width: `${pct}%`, borderRadius: 4, transition: 'width 0.4s', boxShadow: '0 0 8px rgba(232,255,71,0.4)' }} />
             </div>
           </div>
 
           {/* Exercises */}
           <div style={{ margin: '20px 20px 0' }}>
             <div className="section-label" style={{ marginBottom: 12 }}>
-              {dayMode === 'gym' ? 'BLOQUES DE ENTRENAMIENTO' : 'CIRCUITO NON-STOP'}
+              {exercises.length} EJERCICIOS · {dayPlan.focus.toUpperCase()}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {exercises.map((ex, i) => {
@@ -351,35 +495,59 @@ export default function WorkoutPage() {
                 const isExpanded = !!expanded[i];
                 return (
                   <div key={i} onClick={() => setExpanded(e => ({ ...e, [i]: !e[i] }))} style={{
-                    background: '#181818', border: '1.5px solid #2a2a2a', borderRadius: 14, padding: 16,
-                    cursor: 'pointer', opacity: done ? 0.55 : 1, position: 'relative', overflow: 'hidden', transition: 'opacity 0.2s',
+                    background: '#181818', border: `1.5px solid ${done ? '#2a2a2a' : '#333'}`, borderRadius: 14, padding: 16,
+                    cursor: 'pointer', opacity: done ? 0.5 : 1, position: 'relative', overflow: 'hidden', transition: 'opacity 0.2s',
                   }}>
-                    <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: done ? '#444' : accent }} />
-                    <div style={{ paddingLeft: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    {/* Accent bar */}
+                    <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: done ? '#333' : accent }} />
+
+                    <div style={{ paddingLeft: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div style={{ flex: 1, paddingRight: 12 }}>
-                        <div style={{ fontWeight: 700, fontSize: 15, color: '#f2f0ea' }}>{ex.name}</div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, background: `${accent}18`, color: `${accent}cc`, borderRadius: 6, padding: '3px 8px' }}>{ex.sets} series</span>
-                          <span style={{ fontSize: 11, fontWeight: 700, background: `${accent}18`, color: `${accent}cc`, borderRadius: 6, padding: '3px 8px' }}>{ex.reps}</span>
+                        {/* Muscle tag */}
+                        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: '#555', marginBottom: 4 }}>
+                          {ex.muscle}
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: 15, color: '#f2f0ea', marginBottom: 8 }}>{ex.name}</div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(255,255,255,0.06)', color: '#888', borderRadius: 6, padding: '3px 8px' }}>
+                            {ex.sets} series
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 700, background: `${accent}20`, color: accent, borderRadius: 6, padding: '3px 8px' }}>
+                            {ex.reps} reps
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(255,255,255,0.04)', color: '#666', borderRadius: 6, padding: '3px 8px' }}>
+                            ⏱ {ex.rest < 60 ? `${ex.rest}s` : `${ex.rest / 60}min`} descanso
+                          </span>
                         </div>
                       </div>
-                      <button onClick={e => { e.stopPropagation(); toggleExercise(i); }} style={{
-                        width: 32, height: 32, borderRadius: '50%',
-                        border: `2px solid ${done ? '#555' : '#2a2a2a'}`,
-                        background: done ? '#555' : 'transparent',
-                        color: done ? '#0a0a0a' : 'transparent',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 14, fontWeight: 700, cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s',
-                      }}>✓</button>
+                      {/* Check button */}
+                      <button
+                        onClick={e => { e.stopPropagation(); toggleExercise(i); }}
+                        style={{
+                          width: 34, height: 34, borderRadius: '50%',
+                          border: `2px solid ${done ? '#3ddc84' : '#333'}`,
+                          background: done ? '#3ddc84' : 'transparent',
+                          color: done ? '#000' : 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 15, fontWeight: 800, cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s',
+                        }}
+                      >✓</button>
                     </div>
+
+                    {/* Expanded tip + video */}
                     {isExpanded && (
-                      <div style={{ paddingLeft: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid #2a2a2a' }}>
-                        <div style={{ fontSize: 12, color: '#888', lineHeight: 1.6 }}>💡 {ex.tip}</div>
+                      <div style={{ paddingLeft: 10, marginTop: 12, paddingTop: 12, borderTop: '1px solid #2a2a2a' }}>
+                        <div style={{ background: 'rgba(232,255,71,0.04)', border: '1px solid rgba(232,255,71,0.12)', borderRadius: 9, padding: '10px 12px', marginBottom: 10 }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#e8ff47', marginBottom: 5 }}>
+                            💡 TÉCNICA
+                          </div>
+                          <div style={{ fontSize: 12, color: '#888', lineHeight: 1.7 }}>{ex.tip}</div>
+                        </div>
                         <button
                           onClick={e => { e.stopPropagation(); setVideoId(ex.videoId); setVideoTitle(ex.name); }}
-                          style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1.5px solid #2a2a2a', color: '#666', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1.5px solid #2a2a2a', color: '#666', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                         >
-                          ▶ Ver técnica
+                          ▶ Ver técnica en YouTube
                         </button>
                       </div>
                     )}
@@ -389,17 +557,17 @@ export default function WorkoutPage() {
             </div>
           </div>
 
-          {/* Complete */}
-          <div style={{ padding: '28px 20px 0' }}>
+          {/* Complete session */}
+          <div style={{ padding: '24px 20px 0' }}>
             <button className="btn-primary" onClick={completeSession} disabled={pct < 100 || saving || sessionDone}
               style={{ background: sessionDone ? '#2a2a2a' : undefined, color: sessionDone ? '#666' : undefined }}>
-              {saving ? 'GUARDANDO...' : sessionDone ? '✓ SESIÓN COMPLETADA' : 'COMPLETAR SESIÓN'}
+              {saving ? 'GUARDANDO...' : sessionDone ? '✓ SESIÓN COMPLETADA' : `COMPLETAR SESIÓN (${pct}%)`}
             </button>
           </div>
         </>
       )}
 
-      {/* Rest overlay */}
+      {/* ── Rest overlay ── */}
       {restActive && (
         <div onClick={skipRest} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.94)', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#666', marginBottom: 12 }}>DESCANSANDO</div>
@@ -411,7 +579,7 @@ export default function WorkoutPage() {
         </div>
       )}
 
-      {/* Video modal */}
+      {/* ── Video modal ── */}
       {videoId && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.97)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ width: '100%', maxWidth: 640, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -424,6 +592,7 @@ export default function WorkoutPage() {
         </div>
       )}
 
+      {/* ── Toast ── */}
       {toast && (
         <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: '#e8ff47', color: '#0a0a0a', padding: '12px 22px', borderRadius: 10, fontWeight: 700, fontSize: 13, zIndex: 300, whiteSpace: 'nowrap' }}>
           {toast}
