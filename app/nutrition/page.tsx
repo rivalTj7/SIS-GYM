@@ -211,7 +211,7 @@ export default function NutritionPage() {
   }
 
   return (
-    <div style={{ background: '#0a0a0a', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="page-root">
 
       {/* Header */}
       <div style={{ padding: '28px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -66,7 +66,7 @@ export default function ProgressPage() {
   }
 
   if (loading || !user) {
-    return <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner" /></div>;
+    return <div className="min-h-dvh bg-[#0a0a0a] flex items-center justify-center"><div className="spinner" /></div>;
   }
 
   const maxWeight = weights.length > 0 ? Math.max(...weights.map(w => Number(w.weight_kg))) : 100;
@@ -74,7 +74,7 @@ export default function ProgressPage() {
   const weightRange = maxWeight - minWeight || 1;
 
   return (
-    <div style={{ background: '#0a0a0a', minHeight: '100vh', paddingBottom: 90 }}>
+    <div className="page-root">
       {/* Header */}
       <div style={{ padding: '28px 20px 0' }}>
         <div className="font-bebas" style={{ fontSize: 36, letterSpacing: 4, color: '#e8ff47' }}>PROGRESO</div>
