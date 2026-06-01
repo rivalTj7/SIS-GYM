@@ -137,12 +137,13 @@ const PLAN: Day[] = [
 ];
 
 const REST_ACTIVITIES = [
-  '🔄 Rotaciones articulares completas · 5 min',
-  '🦵 Estiramiento isquios y cuádriceps · 45 seg × lado',
-  '🌊 Cobra + Child\'s Pose · 60 seg cada uno',
-  '🚶 Caminata suave 20–30 min (sin apuro)',
-  '💧 Hidratación alta · mínimo 3L de agua',
-  '😴 Priorizá 8 horas de sueño esta noche',
+  '🧬 La síntesis proteica muscular ocurre AHORA — no en el gym',
+  '🥩 Proteína igual que un día de entrenamiento (no la bajes)',
+  '🔄 Movilidad articular: 10 min de rotaciones completas',
+  '🦵 Estiramiento isquios + psoas · 45 seg × lado',
+  '🚶 Caminata ligera 20–30 min — zona 1, sin acelerar',
+  '💧 35 ml de agua × cada kg de tu peso corporal',
+  '😴 8h de sueño: sin esto, no hay recomposición posible',
 ];
 
 const CIRCUMFERENCE = 175.9;
@@ -171,6 +172,7 @@ export default function WorkoutPage() {
   const [videoTitle, setVideoTitle] = useState('');
   const [toast, setToast] = useState('');
   const toastTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [setData, setSetData] = useState<Record<number, { kg: string; rir: number }>>({});
   const [saving, setSaving] = useState(false);
   const [sessionDone, setSessionDone] = useState(false);
 
@@ -181,6 +183,7 @@ export default function WorkoutPage() {
   useEffect(() => {
     setDayMode(null);
     setExpanded({});
+    setSetData({});
     setSessionDone(false);
     if (timerRef.current) clearInterval(timerRef.current);
     setTimerRunning(false);
@@ -294,7 +297,14 @@ export default function WorkoutPage() {
         const { session } = await sRes.json();
         if (session?.id) {
           const sets = exercises.flatMap((ex, i) =>
-            completed[i] ? [{ session_id: session.id, exercise_name: ex.name, set_number: 1, reps: null, weight_kg: null }] : []
+            completed[i] ? [{
+              session_id: session.id,
+              exercise_name: ex.name,
+              set_number: 1,
+              reps: parseInt((ex.reps.match(/\d+/) || ['0'])[0]) || null,
+              weight_kg: setData[i]?.kg ? parseFloat(setData[i].kg) : null,
+              rir: setData[i]?.rir ?? 2,
+            }] : []
           );
           if (sets.length > 0) {
             await fetch('/api/exercises', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sets }) });
@@ -392,9 +402,12 @@ export default function WorkoutPage() {
       {dayPlan.rest && (
         <div style={{ margin: '40px 20px', textAlign: 'center' }}>
           <div style={{ fontSize: 56 }}>🧘</div>
-          <div className="font-bebas" style={{ fontSize: 36, letterSpacing: 2, marginTop: 16, color: '#3ddc84' }}>DESCANSO ACTIVO</div>
-          <div style={{ color: '#666', fontSize: 13, marginTop: 8, lineHeight: 1.7, marginBottom: 24 }}>
-            El músculo crece y la grasa se metaboliza durante el descanso.<br />No lo saltés — es parte del plan.
+          <div className="font-bebas" style={{ fontSize: 34, letterSpacing: 2, marginTop: 16, color: '#3ddc84' }}>RECOMPOSICIÓN ACTIVA</div>
+          <div style={{ color: '#666', fontSize: 13, marginTop: 8, lineHeight: 1.7, marginBottom: 6 }}>
+            La síntesis muscular y la oxidación de grasa ocurren hoy.<br />El descanso no es opcional — <span style={{ color: 'rgba(255,255,255,0.5)' }}>es donde la recomposición sucede.</span>
+          </div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: '#3ddc84', marginBottom: 20 }}>
+            PROTEÍNA ALTA · SUEÑO 8H · MOVIMIENTO SUAVE
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {REST_ACTIVITIES.map(item => (
@@ -543,6 +556,43 @@ export default function WorkoutPage() {
                           </div>
                           <div style={{ fontSize: 12, color: '#888', lineHeight: 1.7 }}>{ex.tip}</div>
                         </div>
+                        {/* Weight + RIR — progressive overload tracking */}
+                        <div style={{ margin: '12px 0', padding: 12, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10 }} onClick={e => e.stopPropagation()}>
+                          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#555', marginBottom: 8 }}>
+                            SOBRECARGA PROGRESIVA — REGISTRAR HOY
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                            <input
+                              type="number"
+                              placeholder="Peso (kg) · vacío si es corporal"
+                              value={setData[i]?.kg ?? ''}
+                              onChange={e => setSetData(prev => ({ ...prev, [i]: { rir: prev[i]?.rir ?? 2, kg: e.target.value } }))}
+                              min={0}
+                              step={2.5}
+                              style={{ flex: 1, padding: '9px 12px', fontSize: 13 }}
+                            />
+                            <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+                              {[0, 1, 2, 3].map(r => (
+                                <button
+                                  key={r}
+                                  onClick={() => setSetData(prev => ({ ...prev, [i]: { kg: prev[i]?.kg ?? '', rir: r } }))}
+                                  style={{
+                                    width: 32, height: 34, borderRadius: 7, cursor: 'pointer',
+                                    fontWeight: 800, fontSize: 12, transition: 'all 0.15s',
+                                    background: (setData[i]?.rir ?? 2) === r ? accent : 'transparent',
+                                    color: (setData[i]?.rir ?? 2) === r ? '#0a0a0a' : '#555',
+                                    border: `1.5px solid ${(setData[i]?.rir ?? 2) === r ? accent : '#2a2a2a'}`,
+                                  }}>
+                                  {r}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 9, color: '#444', letterSpacing: 0.3 }}>
+                            RIR = reps antes del fallo · <span style={{ color: accent }}>RIR 2</span> = zona óptima para recomposición corporal
+                          </div>
+                        </div>
+
                         <button
                           onClick={e => { e.stopPropagation(); setVideoId(ex.videoId); setVideoTitle(ex.name); }}
                           style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1.5px solid #2a2a2a', color: '#666', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}

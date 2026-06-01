@@ -52,7 +52,8 @@ export default function DashboardPage() {
   const kcalNow  = totals?.kcal      ?? 0;
   const protNow  = totals?.protein_g ?? 0;
   const carbNow  = totals?.carbs_g   ?? 0;
-  const kcalPct  = goalKcal > 0 ? Math.min(100, Math.round((kcalNow / goalKcal) * 100)) : 0;
+  const kcalPct   = goalKcal > 0 ? Math.min(100, Math.round((kcalNow / goalKcal) * 100)) : 0;
+  const protPct   = goalProt > 0 ? Math.min(100, Math.round((protNow / goalProt) * 100)) : 0;
   const remaining = Math.max(0, goalKcal - kcalNow);
 
   return (
@@ -145,13 +146,42 @@ export default function DashboardPage() {
 
         {goalKcal > 0 ? (
           <>
-            {/* Calorie bar */}
-            <div className="flex justify-between text-[11px] font-bold mb-2">
-              <span style={{ color: 'rgba(255,255,255,0.7)' }}>{kcalNow} kcal</span>
-              <span style={{ color: 'rgba(255,255,255,0.25)' }}>/ {goalKcal}</span>
+            {/* Protein — Priority #1 for body recomposition */}
+            <div className="mb-3">
+              <div className="flex justify-between items-center mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-extrabold tracking-widest uppercase" style={{ color: '#ff6b6b' }}>Proteína</span>
+                  <span
+                    className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'rgba(255,107,107,0.12)', color: '#ff6b6b', letterSpacing: '0.5px' }}
+                  >
+                    PRIORIDAD #1
+                  </span>
+                </div>
+                <span className="text-[13px] font-extrabold" style={{ color: protPct >= 100 ? '#3ddc84' : '#ff6b6b' }}>
+                  {Math.round(protNow)}g{' '}
+                  <span className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.3)' }}>/ {goalProt}g</span>
+                </span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${protPct}%`,
+                    background: protPct >= 100 ? 'linear-gradient(90deg,#3ddc84,#2bb868)' : 'linear-gradient(90deg,#ff6b6b,#ff4d4d)',
+                    boxShadow: protPct >= 100 ? '0 0 8px rgba(61,220,132,0.5)' : '0 0 6px rgba(255,107,107,0.35)',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Calorie bar (secondary) */}
+            <div className="flex justify-between text-[10px] font-bold mb-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              <span>{kcalNow} kcal</span>
+              <span>/ {goalKcal}</span>
             </div>
             <div
-              className="h-1.5 rounded-full overflow-hidden mb-4"
+              className="h-1 rounded-full overflow-hidden mb-4"
               style={{ background: 'rgba(255,255,255,0.06)' }}
             >
               <div
@@ -159,17 +189,16 @@ export default function DashboardPage() {
                 style={{
                   width: `${kcalPct}%`,
                   background: kcalPct >= 100 ? '#ff6b6b' : 'linear-gradient(90deg, #c8ff00, #aadc00)',
-                  boxShadow: kcalPct >= 100 ? 'none' : '0 0 8px rgba(200,255,0,0.35)',
+                  boxShadow: kcalPct >= 100 ? 'none' : '0 0 6px rgba(200,255,0,0.3)',
                 }}
               />
             </div>
 
-            {/* Macro chips */}
-            <div className="grid grid-cols-3 gap-2">
+            {/* Secondary macros */}
+            <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Proteína', val: Math.round(protNow), goal: goalProt, unit: 'g', color: '#ff6b6b' },
-                { label: 'Carbos',   val: Math.round(carbNow), goal: goalCarb, unit: 'g', color: '#4daaff' },
-                { label: 'Restante', val: remaining,           goal: goalKcal, unit: 'kcal', color: '#c8ff00' },
+                { label: 'Carbos',   val: Math.round(carbNow), unit: 'g',    color: '#4daaff' },
+                { label: 'Restante', val: remaining,           unit: 'kcal', color: '#c8ff00' },
               ].map(m => (
                 <div
                   key={m.label}
@@ -261,12 +290,12 @@ export default function DashboardPage() {
 
       {/* ── Principles ── */}
       <div className="mx-5 mt-5">
-        <p className="section-label mb-3">PRINCIPIOS</p>
+        <p className="section-label mb-3">RECOMPOSICIÓN CORPORAL</p>
         <div className="flex flex-col gap-2">
           {[
-            { icon: '📏', title: 'La recomposición es lenta',    desc: 'No se ve en 2 semanas. Se nota en meses. Constancia sobre perfección.' },
-            { icon: '⚡', title: 'Series cerca del fallo',        desc: 'Compuestos, progresión de cargas, 0–2 RIR en cada sesión.' },
-            { icon: '😴', title: 'El músculo crece descansando', desc: 'Mínimo 7h. Dormir a la misma hora acelera la recuperación.' },
+            { icon: '🥩', title: 'Proteína: 2g por kg de peso',       desc: 'Es el único macro donde NO hay recomposición si falla. Sin proteína suficiente, el músculo no crece aunque entrenes perfecto.' },
+            { icon: '📈', title: 'Sobrecarga progresiva cada semana', desc: 'Más peso o más reps que la semana anterior. Si la fuerza no sube, la composición corporal no cambia.' },
+            { icon: '😴', title: 'El sueño es el entrenamiento',       desc: 'La síntesis proteica muscular ocurre durante las primeras 3 horas de sueño profundo. 8h no es opcional.' },
           ].map(p => (
             <div key={p.title} className="glass-card flex gap-3 p-4">
               <span className="text-xl leading-none mt-0.5 flex-shrink-0">{p.icon}</span>
