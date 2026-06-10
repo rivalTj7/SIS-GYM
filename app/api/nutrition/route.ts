@@ -12,6 +12,13 @@ const profileSchema = z.object({
   height_cm: z.number().int().min(140).max(220),
   activity: z.enum(['sed', 'med', 'hi']),
   goal: z.enum(['def', 'mant', 'vol', 'agr']),
+  // Composición corporal (opcional — de báscula Tanita u otra)
+  body_fat_pct:  z.number().min(1).max(60).optional(),
+  muscle_kg:     z.number().min(10).max(150).optional(),
+  bone_kg:       z.number().min(0.5).max(10).optional(),
+  water_pct:     z.number().min(20).max(80).optional(),
+  visceral_fat:  z.number().min(1).max(20).optional(),
+  metabolic_age: z.number().int().min(10).max(90).optional(),
 });
 
 const foodSchema = z.object({
@@ -70,17 +77,26 @@ export async function POST(req: NextRequest) {
 
       const rows = await sql`
         INSERT INTO user_profiles
-          (user_id, sex, age, weight_kg, height_cm, activity, goal, tdee, goal_kcal, goal_prot, goal_carb)
+          (user_id, sex, age, weight_kg, height_cm, activity, goal, tdee, goal_kcal, goal_prot, goal_carb,
+           body_fat_pct, muscle_kg, bone_kg, water_pct, visceral_fat, metabolic_age)
         VALUES
           (${auth.userId}, ${data.sex}, ${data.age}, ${data.weight_kg},
            ${data.height_cm}, ${data.activity}, ${data.goal},
-           ${tdee}, ${goalKcal}, ${protein}, ${carbs})
+           ${tdee}, ${goalKcal}, ${protein}, ${carbs},
+           ${data.body_fat_pct ?? null}, ${data.muscle_kg ?? null}, ${data.bone_kg ?? null},
+           ${data.water_pct ?? null}, ${data.visceral_fat ?? null}, ${data.metabolic_age ?? null})
         ON CONFLICT (user_id) DO UPDATE SET
           sex = EXCLUDED.sex, age = EXCLUDED.age,
           weight_kg = EXCLUDED.weight_kg, height_cm = EXCLUDED.height_cm,
           activity = EXCLUDED.activity, goal = EXCLUDED.goal,
           tdee = EXCLUDED.tdee, goal_kcal = EXCLUDED.goal_kcal,
           goal_prot = EXCLUDED.goal_prot, goal_carb = EXCLUDED.goal_carb,
+          body_fat_pct  = COALESCE(EXCLUDED.body_fat_pct,  user_profiles.body_fat_pct),
+          muscle_kg     = COALESCE(EXCLUDED.muscle_kg,     user_profiles.muscle_kg),
+          bone_kg       = COALESCE(EXCLUDED.bone_kg,       user_profiles.bone_kg),
+          water_pct     = COALESCE(EXCLUDED.water_pct,     user_profiles.water_pct),
+          visceral_fat  = COALESCE(EXCLUDED.visceral_fat,  user_profiles.visceral_fat),
+          metabolic_age = COALESCE(EXCLUDED.metabolic_age, user_profiles.metabolic_age),
           updated_at = NOW()
         RETURNING *
       `;

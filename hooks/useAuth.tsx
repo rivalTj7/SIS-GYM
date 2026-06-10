@@ -6,6 +6,13 @@ type Profile = {
   tdee: number; goal_kcal: number; goal_prot: number; goal_carb: number;
   sex: string; age: number; weight_kg: number; height_cm: number;
   activity: string; goal: string;
+  // Composición corporal (Tanita / báscula inteligente)
+  body_fat_pct: number | null;
+  muscle_kg: number | null;
+  bone_kg: number | null;
+  water_pct: number | null;
+  visceral_fat: number | null;
+  metabolic_age: number | null;
 } | null;
 
 type AuthCtx = {

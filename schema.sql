@@ -14,20 +14,35 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- PERFIL FÍSICO (TDEE y macros)
 CREATE TABLE IF NOT EXISTS user_profiles (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
-  sex         CHAR(1) CHECK (sex IN ('m','f')),
-  age         INT,
-  weight_kg   NUMERIC(5,2),
-  height_cm   INT,
-  activity    TEXT CHECK (activity IN ('sed','med','hi')),
-  goal        TEXT CHECK (goal IN ('def','mant','vol','agr')),
-  tdee        INT,
-  goal_kcal   INT,
-  goal_prot   INT,
-  goal_carb   INT,
-  updated_at  TIMESTAMPTZ DEFAULT NOW()
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
+  sex           CHAR(1) CHECK (sex IN ('m','f')),
+  age           INT,
+  weight_kg     NUMERIC(5,2),
+  height_cm     INT,
+  activity      TEXT CHECK (activity IN ('sed','med','hi')),
+  goal          TEXT CHECK (goal IN ('def','mant','vol','agr')),
+  tdee          INT,
+  goal_kcal     INT,
+  goal_prot     INT,
+  goal_carb     INT,
+  -- Composición corporal (de báscula inteligente tipo Tanita)
+  body_fat_pct  NUMERIC(4,2),   -- ej: 23.04
+  muscle_kg     NUMERIC(5,2),   -- ej: 58.78
+  bone_kg       NUMERIC(4,2),   -- ej: 3.09
+  water_pct     NUMERIC(4,2),   -- ej: 54.41
+  visceral_fat  NUMERIC(4,2),   -- ej: 6.31
+  metabolic_age INT,            -- ej: 40
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migración: agregar columnas de composición si ya existe la tabla
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS body_fat_pct  NUMERIC(4,2);
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS muscle_kg     NUMERIC(5,2);
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS bone_kg       NUMERIC(4,2);
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS water_pct     NUMERIC(4,2);
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS visceral_fat  NUMERIC(4,2);
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS metabolic_age INT;
 
 -- REGISTRO DE PESO CORPORAL
 CREATE TABLE IF NOT EXISTS weight_logs (
