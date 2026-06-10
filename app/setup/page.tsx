@@ -10,10 +10,10 @@ const ACTIVITY_OPTS = [
 ];
 
 const GOAL_OPTS = [
-  { value: 'def', label: 'Quemar grasa', desc: 'Déficit –400 kcal/día', color: '#ff6b35' },
-  { value: 'mant', label: 'Mantener', desc: 'Recomposición corporal', color: '#e8ff47' },
-  { value: 'vol', label: 'Ganar músculo', desc: 'Superávit +400 kcal/día', color: '#4daaff' },
-  { value: 'agr', label: 'Déficit agresivo', desc: 'Pérdida rápida –500 kcal', color: '#ff4d4d' },
+  { value: 'mant', label: 'Recomposición corporal', desc: 'Ligero déficit –200 kcal · perder grasa + ganar músculo', color: '#e8ff47', recommended: true },
+  { value: 'def', label: 'Quemar grasa', desc: 'Déficit –400 kcal · pérdida de grasa prioritaria', color: '#ff6b35', recommended: false },
+  { value: 'vol', label: 'Ganar músculo', desc: 'Superávit +350 kcal · bulk limpio', color: '#4daaff', recommended: false },
+  { value: 'agr', label: 'Déficit agresivo', desc: 'Déficit –500 kcal · pérdida rápida (no recomendado)', color: '#ff4d4d', recommended: false },
 ];
 
 export default function SetupPage() {
@@ -108,9 +108,14 @@ export default function SetupPage() {
           borderRadius: 12,
           border: `1.5px solid ${form.goal === opt.value ? opt.color : '#2a2a2a'}`,
           background: form.goal === opt.value ? `${opt.color}14` : '#181818',
-          textAlign: 'left', cursor: 'pointer',
+          textAlign: 'left', cursor: 'pointer', position: 'relative',
         }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: form.goal === opt.value ? opt.color : '#f2f0ea' }}>{opt.label}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: form.goal === opt.value ? opt.color : '#f2f0ea' }}>{opt.label}</span>
+            {opt.recommended && (
+              <span style={{ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 100, background: 'rgba(232,255,71,0.12)', color: '#e8ff47', letterSpacing: 1 }}>RECOMENDADO</span>
+            )}
+          </div>
           <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>{opt.desc}</div>
         </button>
       ))}

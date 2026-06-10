@@ -46,15 +46,22 @@ export default function DashboardPage() {
     );
   }
 
-  const goalKcal = profile?.goal_kcal ?? 0;
-  const goalProt = profile?.goal_prot ?? 0;
-  const goalCarb = profile?.goal_carb ?? 0;
-  const kcalNow  = totals?.kcal      ?? 0;
-  const protNow  = totals?.protein_g ?? 0;
-  const carbNow  = totals?.carbs_g   ?? 0;
+  const goalKcal  = profile?.goal_kcal ?? 0;
+  const goalProt  = profile?.goal_prot ?? 0;
+  const goalCarb  = profile?.goal_carb ?? 0;
+  const kcalNow   = totals?.kcal      ?? 0;
+  const protNow   = totals?.protein_g ?? 0;
+  const carbNow   = totals?.carbs_g   ?? 0;
   const kcalPct   = goalKcal > 0 ? Math.min(100, Math.round((kcalNow / goalKcal) * 100)) : 0;
   const protPct   = goalProt > 0 ? Math.min(100, Math.round((protNow / goalProt) * 100)) : 0;
   const remaining = Math.max(0, goalKcal - kcalNow);
+
+  // Recomp coaching stats derived from profile
+  const weightKg    = profile?.weight_kg ?? 0;
+  const protTarget  = weightKg > 0 ? Math.round(weightKg * 2.2) : 0;
+  const tdee        = profile?.tdee ?? 0;
+  const recompKcal  = profile?.goal_kcal ?? 0;
+  const goalIsRecomp = profile?.goal === 'mant';
 
   return (
     <div className="page-root">
@@ -128,6 +135,32 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* ── Recomp Coach Card ── */}
+      {goalIsRecomp && weightKg > 0 && (
+        <div
+          className="mx-5 mt-3 rounded-2xl p-4"
+          style={{ background: 'rgba(255,107,107,0.04)', border: '1.5px solid rgba(255,107,107,0.12)' }}
+        >
+          <p className="section-label mb-3" style={{ color: 'rgba(255,107,107,0.6)' }}>PROTOCOLO RECOMPOSICIÓN</p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Proteína/día', val: `${protTarget}g`, sub: 'mín. absoluto', color: '#ff6b6b' },
+              { label: 'TDEE',         val: `${tdee}`,        sub: 'kcal base',    color: 'rgba(255,255,255,0.5)' },
+              { label: 'Objetivo',     val: `${recompKcal}`,  sub: 'kcal recomp',  color: '#c8ff00' },
+            ].map(s => (
+              <div key={s.label} className="text-center py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <p className="font-bebas text-xl leading-none" style={{ color: s.color }}>{s.val}</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider mt-1" style={{ color: 'rgba(255,255,255,0.22)' }}>{s.label}</p>
+                <p className="text-[7px] mt-0.5" style={{ color: 'rgba(255,255,255,0.15)' }}>{s.sub}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] mt-3 leading-relaxed" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            PPL ×2 · 6 días · RIR 2 en cada serie · Proteína todos los días sin excepción
+          </p>
+        </div>
+      )}
 
       {/* ── Nutrition Snapshot ── */}
       <div
