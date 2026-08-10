@@ -9,8 +9,8 @@ const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
 
 const GOAL_ADJUSTMENTS: Record<Goal, number> = {
   def: -400,
-  mant: 0,
-  vol: 400,
+  mant: -300,
+  vol: 350,
   agr: -500,
 };
 
@@ -36,9 +36,9 @@ export function calculateGoalCalories(tdee: number, goal: Goal): number {
 
 export function calculateMacros(goalKcal: number, weightKg: number) {
   const protein = Math.round(weightKg * 2.2); // 2.2g per kg
-  const fat = Math.round((goalKcal * 0.25) / 9); // 25% from fat
+  const fat = Math.round((goalKcal * 0.28) / 9);
   const carbsKcal = goalKcal - protein * 4 - fat * 9;
-  const carbs = Math.max(0, Math.round(carbsKcal / 4));
+  const carbs = Math.max(50, Math.round(carbsKcal / 4));
   return { protein, fat, carbs };
 }
 
