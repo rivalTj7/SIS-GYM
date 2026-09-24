@@ -60,6 +60,44 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ profile, foods, totals, date });
 }
 
+async function runProfileMigration() {
+  await sql`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS body_fat_pct  NUMERIC(4,2)`;
+  await sql`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS muscle_kg     NUMERIC(5,2)`;
+  await sql`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS bone_kg       NUMERIC(4,2)`;
+  await sql`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS water_pct     NUMERIC(4,2)`;
+  await sql`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS visceral_fat  NUMERIC(4,2)`;
+  await sql`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS metabolic_age INT`;
+  await sql`ALTER TABLE user_profiles ADD CONSTRAINT IF NOT EXISTS uq_profile_user UNIQUE (user_id)`;
+}
+
+async function upsertProfile(userId: string, data: ReturnType<typeof profileSchema.parse>, tdee: number, goalKcal: number, protein: number, carbs: number) {
+  return sql`
+    INSERT INTO user_profiles
+      (user_id, sex, age, weight_kg, height_cm, activity, goal, tdee, goal_kcal, goal_prot, goal_carb,
+       body_fat_pct, muscle_kg, bone_kg, water_pct, visceral_fat, metabolic_age)
+    VALUES
+      (${userId}, ${data.sex}, ${data.age}, ${data.weight_kg},
+       ${data.height_cm}, ${data.activity}, ${data.goal},
+       ${tdee}, ${goalKcal}, ${protein}, ${carbs},
+       ${data.body_fat_pct ?? null}, ${data.muscle_kg ?? null}, ${data.bone_kg ?? null},
+       ${data.water_pct ?? null}, ${data.visceral_fat ?? null}, ${data.metabolic_age ?? null})
+    ON CONFLICT (user_id) DO UPDATE SET
+      sex = EXCLUDED.sex, age = EXCLUDED.age,
+      weight_kg = EXCLUDED.weight_kg, height_cm = EXCLUDED.height_cm,
+      activity = EXCLUDED.activity, goal = EXCLUDED.goal,
+      tdee = EXCLUDED.tdee, goal_kcal = EXCLUDED.goal_kcal,
+      goal_prot = EXCLUDED.goal_prot, goal_carb = EXCLUDED.goal_carb,
+      body_fat_pct  = COALESCE(EXCLUDED.body_fat_pct,  user_profiles.body_fat_pct),
+      muscle_kg     = COALESCE(EXCLUDED.muscle_kg,     user_profiles.muscle_kg),
+      bone_kg       = COALESCE(EXCLUDED.bone_kg,       user_profiles.bone_kg),
+      water_pct     = COALESCE(EXCLUDED.water_pct,     user_profiles.water_pct),
+      visceral_fat  = COALESCE(EXCLUDED.visceral_fat,  user_profiles.visceral_fat),
+      metabolic_age = COALESCE(EXCLUDED.metabolic_age, user_profiles.metabolic_age),
+      updated_at = NOW()
+    RETURNING *
+  `;
+}
+
 // POST /api/nutrition — profile OR food log
 export async function POST(req: NextRequest) {
   const auth = getAuthUserFromRequest(req);
@@ -75,31 +113,20 @@ export async function POST(req: NextRequest) {
       const goalKcal = calculateGoalCalories(tdee, data.goal);
       const { protein, carbs } = calculateMacros(goalKcal, data.weight_kg);
 
-      const rows = await sql`
-        INSERT INTO user_profiles
-          (user_id, sex, age, weight_kg, height_cm, activity, goal, tdee, goal_kcal, goal_prot, goal_carb,
-           body_fat_pct, muscle_kg, bone_kg, water_pct, visceral_fat, metabolic_age)
-        VALUES
-          (${auth.userId}, ${data.sex}, ${data.age}, ${data.weight_kg},
-           ${data.height_cm}, ${data.activity}, ${data.goal},
-           ${tdee}, ${goalKcal}, ${protein}, ${carbs},
-           ${data.body_fat_pct ?? null}, ${data.muscle_kg ?? null}, ${data.bone_kg ?? null},
-           ${data.water_pct ?? null}, ${data.visceral_fat ?? null}, ${data.metabolic_age ?? null})
-        ON CONFLICT (user_id) DO UPDATE SET
-          sex = EXCLUDED.sex, age = EXCLUDED.age,
-          weight_kg = EXCLUDED.weight_kg, height_cm = EXCLUDED.height_cm,
-          activity = EXCLUDED.activity, goal = EXCLUDED.goal,
-          tdee = EXCLUDED.tdee, goal_kcal = EXCLUDED.goal_kcal,
-          goal_prot = EXCLUDED.goal_prot, goal_carb = EXCLUDED.goal_carb,
-          body_fat_pct  = COALESCE(EXCLUDED.body_fat_pct,  user_profiles.body_fat_pct),
-          muscle_kg     = COALESCE(EXCLUDED.muscle_kg,     user_profiles.muscle_kg),
-          bone_kg       = COALESCE(EXCLUDED.bone_kg,       user_profiles.bone_kg),
-          water_pct     = COALESCE(EXCLUDED.water_pct,     user_profiles.water_pct),
-          visceral_fat  = COALESCE(EXCLUDED.visceral_fat,  user_profiles.visceral_fat),
-          metabolic_age = COALESCE(EXCLUDED.metabolic_age, user_profiles.metabolic_age),
-          updated_at = NOW()
-        RETURNING *
-      `;
+      let rows: Record<string, unknown>[];
+      try {
+        rows = await upsertProfile(auth.userId, data, tdee, goalKcal, protein, carbs);
+      } catch (sqlErr) {
+        const msg = sqlErr instanceof Error ? sqlErr.message : String(sqlErr);
+        // Auto-migrate if columns are missing, then retry once
+        if (msg.includes('column') || msg.includes('constraint') || msg.includes('ON CONFLICT')) {
+          await runProfileMigration();
+          rows = await upsertProfile(auth.userId, data, tdee, goalKcal, protein, carbs);
+        } else {
+          throw sqlErr;
+        }
+      }
+
       return NextResponse.json({ profile: rows[0] });
     } catch (err) {
       if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
