@@ -103,7 +103,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ profile: rows[0] });
     } catch (err) {
       if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors }, { status: 400 });
-      throw err;
+      console.error('[nutrition POST] profile save error:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
