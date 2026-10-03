@@ -52,12 +52,6 @@ export function getGoalLabel(goal: Goal): string {
   return labels[goal];
 }
 
-// 1RM estimado (Epley formula)
-export function estimate1RM(weight: number, reps: number): number {
-  if (reps === 1) return weight;
-  return Math.round(weight * (1 + reps / 30));
-}
-
 // Volumen de entrenamiento = sets × reps × weight
 export function calculateVolume(sets: Array<{ weight_kg: number | null; reps: number | null }>) {
   return sets.reduce((total, set) => {
