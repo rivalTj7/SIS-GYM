@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useWakeLock } from '@/hooks/useWakeLock';
 import BottomNav from '@/components/BottomNav';
+import { e1rm, parseRepRange, suggestNext, type SessionSets, type Suggestion } from '@/lib/training';
 
 type Ex = { name: string; sets: number; reps: string; videoId: string; tip: string; isSuperset?: boolean };
 type FinisherDef = { title: string; sub: string; moves: string[] };
@@ -116,8 +118,19 @@ const DAY_NAMES = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
 const CIRCUMFERENCE = 175.9;
 const ZONE2_SECS = 40 * 60;
 
-type DayState = { completed: Record<number, boolean>; weights: Record<number, string>; rirs: Record<number, number>; finisherDone: boolean };
-const EMPTY_STATE: DayState = { completed: {}, weights: {}, rirs: {}, finisherDone: false };
+type SetLog = { w: string; r: string; done: boolean };
+type DayState = {
+  sets: Record<number, SetLog[]>;
+  rirs: Record<number, number>;
+  finisherDone: boolean;
+  sessionId?: string;
+  setsSaved?: boolean;
+  saved?: boolean;
+};
+const EMPTY_STATE: DayState = { sets: {}, rirs: {}, finisherDone: false };
+
+type History = Record<string, { sessions: SessionSets[]; best_e1rm: number | null }>;
+type PRHit = { name: string; est: number; prev: number };
 
 export default function WorkoutPage() {
   const { user, loading } = useAuth();
@@ -149,6 +162,11 @@ export default function WorkoutPage() {
   const toastTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [saving, setSaving] = useState(false);
   const [sessionDone, setSessionDone] = useState(false);
+  const [history, setHistory] = useState<History>({});
+  const [prHits, setPrHits] = useState<PRHit[]>([]);
+  const [wakeOn, setWakeOn] = useState(() => {
+    try { return localStorage.getItem('burngt_wakelock') !== '0'; } catch { return true; }
+  });
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -156,10 +174,34 @@ export default function WorkoutPage() {
 
   const plan = PLAN[selectedDay];
 
+  useWakeLock(wakeOn && ((!!dayMode && !sessionDone) || cardioRunning));
+
+  function toggleWake() {
+    setWakeOn(v => {
+      try { localStorage.setItem('burngt_wakelock', v ? '0' : '1'); } catch {}
+      return !v;
+    });
+  }
+
+  useEffect(() => {
+    if (!dayMode || plan.isCardio) return;
+    const names = (dayMode === 'gym' ? plan.gym : plan.home).map(e => e.name);
+    const qs = new URLSearchParams({ recent: '1' });
+    names.forEach(n => qs.append('name', n));
+    let cancelled = false;
+    fetch(`/api/exercises?${qs}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!cancelled && d?.recent) setHistory(d.recent); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dayMode, selectedDay]);
+
   useEffect(() => {
     setDayMode(null);
     setExpanded({});
     setSessionDone(false);
+    setPrHits([]);
     if (timerRef.current) clearInterval(timerRef.current);
     setTimerRunning(false);
     setTimerRemaining(timerTotal);
@@ -183,13 +225,15 @@ export default function WorkoutPage() {
     const d = new Date();
     const jan1 = new Date(d.getFullYear(), 0, 1);
     const week = Math.ceil((((+d - +jan1) / 86400000) + jan1.getDay() + 1) / 7);
-    return `burngt_v2_${d.getFullYear()}_w${week}_d${day}`;
+    return `burngt_v3_${d.getFullYear()}_w${week}_d${day}`;
   }
 
   function loadDay(day: number) {
     try {
       const raw = localStorage.getItem(getStorageKey(day));
-      setDs(raw ? JSON.parse(raw) : EMPTY_STATE);
+      const parsed: DayState = raw ? { ...EMPTY_STATE, ...JSON.parse(raw) } : EMPTY_STATE;
+      setDs(parsed);
+      setSessionDone(!!parsed.saved);
     } catch { setDs(EMPTY_STATE); }
   }
 
@@ -201,13 +245,52 @@ export default function WorkoutPage() {
     });
   }
 
-  function toggleExercise(idx: number) {
+  const blankSets = (n: number): SetLog[] => Array.from({ length: n }, () => ({ w: '', r: '', done: false }));
+  const setsOf = (i: number, ex: Ex): SetLog[] => ds.sets[i] ?? blankSets(ex.sets);
+
+  function suggestionFor(ex: Ex): Suggestion | null {
+    const sessions = history[ex.name]?.sessions;
+    return sessions && sessions.length ? suggestNext(sessions, ex.sets, ex.reps) : null;
+  }
+
+  // Valores que se confirman al tocar ✓ si no escribiste nada: lo de la serie anterior, o la sugerencia.
+  function prefillFor(i: number, si: number, ex: Ex): { w: string; r: string } {
+    const prev = si > 0 ? ds.sets[i]?.[si - 1] : undefined;
+    const sug = suggestionFor(ex);
+    const range = parseRepRange(ex.reps);
+    return {
+      w: prev?.w || (sug?.weight != null ? String(sug.weight) : ''),
+      r: prev?.r || (sug?.reps != null ? String(sug.reps) : range ? String(range.min) : ''),
+    };
+  }
+
+  function editSet(i: number, si: number, ex: Ex, patch: Partial<SetLog>) {
+    updateDs(prev => {
+      const cur = (prev.sets[i] ?? blankSets(ex.sets)).map(s => ({ ...s }));
+      cur[si] = { ...cur[si], ...patch };
+      return { ...prev, sets: { ...prev.sets, [i]: cur } };
+    });
+  }
+
+  function toggleSet(i: number, si: number, ex: Ex, nextEx: Ex | undefined) {
+    const pre = prefillFor(i, si, ex);
     let willDone = false;
     updateDs(prev => {
-      willDone = !prev.completed[idx];
-      return { ...prev, completed: { ...prev.completed, [idx]: willDone } };
+      const cur = (prev.sets[i] ?? blankSets(ex.sets)).map(s => ({ ...s }));
+      const s = cur[si];
+      willDone = !s.done;
+      if (willDone) {
+        if (!s.w) s.w = pre.w;
+        if (!s.r) s.r = pre.r;
+      }
+      s.done = willDone;
+      return { ...prev, sets: { ...prev.sets, [i]: cur } };
     });
-    setTimeout(() => { if (willDone) { showToast('¡Serie completada! 💪'); startRest(); } }, 0);
+    setTimeout(() => {
+      if (!willDone) return;
+      if (ex.isSuperset && nextEx?.isSuperset) showToast('Sin descanso → pasá al siguiente 💪');
+      else { showToast('¡Serie completada! 💪'); startRest(); }
+    }, 0);
   }
 
   function toggleFinisher() {
@@ -276,36 +359,70 @@ export default function WorkoutPage() {
   }
 
   async function completeSession() {
-    if (!dayMode) return;
+    if (!dayMode || saving) return;
     setSaving(true);
+    const json = { 'Content-Type': 'application/json' };
     try {
-      const dateStr = new Date().toISOString().slice(0, 10);
-      const sRes = await fetch('/api/workouts', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ day_key: DAY_NAMES[selectedDay], split_type: plan.splitType, mode: dayMode === 'gym' ? 'gym' : 'casa', session_date: dateStr }),
-      });
-      if (sRes.ok) {
-        const { session } = await sRes.json();
-        if (session?.id) {
-          const exList = dayMode === 'gym' ? plan.gym : plan.home;
-          const sets = exList.flatMap((ex, i) =>
-            ds.completed[i] ? [{ session_id: session.id, exercise_name: ex.name, set_number: 1, reps: null, weight_kg: ds.weights[i] ? parseFloat(ds.weights[i]) : null, rir: ds.rirs[i] ?? null }] : []
-          );
-          if (sets.length > 0) await fetch('/api/exercises', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sets }) });
-          await fetch(`/api/workouts/${session.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: true }) });
-        }
+      const exList = dayMode === 'gym' ? plan.gym : plan.home;
+      const num = (v: string) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
+
+      let sessionId = ds.sessionId;
+      if (!sessionId) {
+        const sRes = await fetch('/api/workouts', {
+          method: 'POST', headers: json,
+          body: JSON.stringify({ day_key: DAY_NAMES[selectedDay], split_type: plan.splitType, mode: dayMode === 'gym' ? 'gym' : 'casa', session_date: new Date().toISOString().slice(0, 10) }),
+        });
+        if (!sRes.ok) throw new Error();
+        sessionId = (await sRes.json()).session?.id as string | undefined;
+        if (!sessionId) throw new Error();
+        updateDs(prev => ({ ...prev, sessionId }));
       }
-    } catch {}
+
+      if (!ds.setsSaved) {
+        const sets = exList.flatMap((ex, i) =>
+          setsOf(i, ex).flatMap((s, si) => s.done ? [{
+            session_id: sessionId, exercise_name: ex.name, set_number: si + 1,
+            weight_kg: num(s.w), reps: (() => { const r = num(s.r); return r === null ? null : Math.round(r); })(), rir: ds.rirs[i] ?? null,
+          }] : [])
+        );
+        if (sets.length > 0) {
+          const eRes = await fetch('/api/exercises', { method: 'POST', headers: json, body: JSON.stringify({ sets }) });
+          if (!eRes.ok) throw new Error();
+        }
+        updateDs(prev => ({ ...prev, setsSaved: true }));
+      }
+
+      const pRes = await fetch(`/api/workouts/${sessionId}`, { method: 'PATCH', headers: json, body: JSON.stringify({ completed: true }) });
+      if (!pRes.ok) throw new Error();
+
+      const hits: PRHit[] = [];
+      exList.forEach((ex, i) => {
+        const prev = history[ex.name]?.best_e1rm;
+        if (prev == null) return;
+        let best = 0;
+        setsOf(i, ex).forEach(s => {
+          if (!s.done) return;
+          const v = e1rm(num(s.w), num(s.r));
+          if (v !== null && v > best) best = v;
+        });
+        if (best > prev) hits.push({ name: ex.name, est: best, prev });
+      });
+      setPrHits(hits);
+      updateDs(prev => ({ ...prev, saved: true }));
+      setSessionDone(true);
+      showToast('🏆 ¡SESIÓN COMPLETADA! Beast mode.');
+    } catch {
+      showToast('No se pudo guardar. Reintentá.');
+    }
     setSaving(false);
-    setSessionDone(true);
-    showToast('🏆 ¡SESIÓN COMPLETADA! Beast mode.');
   }
 
   const exercises = dayMode === 'gym' ? plan.gym : dayMode === 'home' ? plan.home : [];
   const accent = dayMode === 'home' ? '#ff6b35' : '#e8ff47';
-  const doneCount = exercises.filter((_, i) => !!ds.completed[i]).length;
-  const totalItems = exercises.length + (plan.finisher ? 1 : 0);
-  const pct = totalItems > 0 ? Math.round(((doneCount + (ds.finisherDone ? 1 : 0)) / totalItems) * 100) : 0;
+  const totalSets = exercises.reduce((a, ex) => a + ex.sets, 0);
+  const doneSets = exercises.reduce((a, ex, i) => a + setsOf(i, ex).filter(s => s.done).length, 0);
+  const totalItems = totalSets + (plan.finisher ? 1 : 0);
+  const pct = totalItems > 0 ? Math.round(((doneSets + (ds.finisherDone ? 1 : 0)) / totalItems) * 100) : 0;
   const offset = CIRCUMFERENCE * (1 - timerRemaining / timerTotal);
   const fmtTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
@@ -349,10 +466,10 @@ export default function WorkoutPage() {
           <div className="font-bebas" style={{ fontSize: 32, letterSpacing: 2, marginBottom: 4, textAlign: 'center', color: '#f2f0ea' }}>¿VAS AL GYM HOY?</div>
           <div style={{ fontSize: 12, color: '#555', marginBottom: 32, textAlign: 'center' }}>{plan.muscle}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 320 }}>
-            <button onClick={() => { setDayMode('gym'); setShowModeModal(false); }} style={{ background: '#e8ff47', color: '#000', border: 'none', borderRadius: 14, padding: '20px', fontFamily: 'var(--font-bebas, sans-serif)', fontSize: 20, letterSpacing: 3, cursor: 'pointer' }}>
+            <button onClick={() => { setDayMode('gym'); setExpanded({ 0: true }); setShowModeModal(false); }} style={{ background: '#e8ff47', color: '#000', border: 'none', borderRadius: 14, padding: '20px', fontFamily: 'var(--font-bebas, sans-serif)', fontSize: 20, letterSpacing: 3, cursor: 'pointer' }}>
               🏛️ SÍ, VOY AL GYM
             </button>
-            <button onClick={() => { setDayMode('home'); setShowModeModal(false); }} style={{ background: '#1a1a1a', color: '#ff6b35', border: '1.5px solid #ff6b35', borderRadius: 14, padding: '20px', fontFamily: 'var(--font-bebas, sans-serif)', fontSize: 20, letterSpacing: 3, cursor: 'pointer' }}>
+            <button onClick={() => { setDayMode('home'); setExpanded({ 0: true }); setShowModeModal(false); }} style={{ background: '#1a1a1a', color: '#ff6b35', border: '1.5px solid #ff6b35', borderRadius: 14, padding: '20px', fontFamily: 'var(--font-bebas, sans-serif)', fontSize: 20, letterSpacing: 3, cursor: 'pointer' }}>
               🏠 NO, ME QUEDO EN CASA
             </button>
             <button onClick={() => setShowModeModal(false)} style={{ background: 'none', border: 'none', color: '#444', fontSize: 12, cursor: 'pointer', marginTop: 4 }}>Cancelar</button>
@@ -440,6 +557,7 @@ export default function WorkoutPage() {
               {dayMode === 'gym' ? '🏛️ GYM' : '🏠 CASA'} — {plan.label}
             </div>
             <button onClick={() => setShowModeModal(true)} style={{ background: 'none', border: '1px solid #2a2a2a', color: '#444', borderRadius: 7, padding: '5px 10px', fontSize: 11, cursor: 'pointer' }}>Cambiar</button>
+            <button onClick={toggleWake} title="Mantener la pantalla encendida" style={{ background: 'none', border: `1px solid ${wakeOn ? 'rgba(232,255,71,0.4)' : '#2a2a2a'}`, color: wakeOn ? '#e8ff47' : '#444', borderRadius: 7, padding: '5px 10px', fontSize: 11, cursor: 'pointer' }}>🔆 {wakeOn ? 'ON' : 'OFF'}</button>
           </div>
           <div style={{ margin: '4px 20px 0', fontSize: 10, color: '#444', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>{plan.muscle}</div>
 
@@ -495,7 +613,12 @@ export default function WorkoutPage() {
             <div className="section-label" style={{ marginBottom: 10 }}>EJERCICIOS PRINCIPALES</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {exercises.map((ex, i) => {
-                const done = !!ds.completed[i];
+                const exSets = setsOf(i, ex);
+                const doneN = exSets.filter(x => x.done).length;
+                const done = doneN === ex.sets;
+                const sug = suggestionFor(ex);
+                const bestPrev = history[ex.name]?.best_e1rm ?? null;
+                const lastDone = [...exSets].reverse().find(x => x.done && x.w);
                 const isExpanded = !!expanded[i];
                 const nextIsSuperset = ex.isSuperset && exercises[i + 1]?.isSuperset;
                 return (
@@ -521,36 +644,65 @@ export default function WorkoutPage() {
                         <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                           <span style={{ fontSize: 10, fontWeight: 700, background: `${accent}18`, color: `${accent}bb`, borderRadius: 5, padding: '2px 7px' }}>{ex.sets} series</span>
                           <span style={{ fontSize: 10, fontWeight: 700, background: `${accent}18`, color: `${accent}bb`, borderRadius: 5, padding: '2px 7px' }}>{ex.reps}</span>
-                          {ds.weights[i] && <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(255,255,255,0.06)', color: '#888', borderRadius: 5, padding: '2px 7px' }}>{ds.weights[i]} kg</span>}
+                          {lastDone && <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(255,255,255,0.06)', color: '#888', borderRadius: 5, padding: '2px 7px' }}>{lastDone.w} kg</span>}
                           {ds.rirs[i] !== undefined && <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(255,255,255,0.06)', color: '#888', borderRadius: 5, padding: '2px 7px' }}>RIR {ds.rirs[i]}</span>}
                         </div>
                       </div>
-                      <button onClick={e => { e.stopPropagation(); toggleExercise(i); }} style={{
-                        width: 30, height: 30, borderRadius: '50%',
-                        border: `2px solid ${done ? '#555' : '#333'}`,
+                      <div style={{
+                        minWidth: 34, height: 30, borderRadius: 15, padding: '0 8px', boxSizing: 'border-box',
+                        border: `2px solid ${done ? '#555' : doneN > 0 ? accent : '#333'}`,
                         background: done ? '#555' : 'transparent',
-                        color: done ? '#0a0a0a' : 'transparent',
+                        color: done ? '#0a0a0a' : doneN > 0 ? accent : '#555',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s',
-                      }}>✓</button>
+                        fontSize: 11, fontWeight: 700, flexShrink: 0, transition: 'all 0.2s',
+                      }}>{done ? '✓' : `${doneN}/${ex.sets}`}</div>
                     </div>
                     {isExpanded && (
                       <div style={{ paddingLeft: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid #222' }}>
                         <div style={{ fontSize: 12, color: '#777', lineHeight: 1.6, marginBottom: 12 }}>💡 {ex.tip}</div>
-                        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }} onClick={e => e.stopPropagation()}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1, color: '#444', marginBottom: 4, textTransform: 'uppercase' }}>Peso utilizado (kg)</div>
-                            <input
-                              type="number"
-                              inputMode="decimal"
-                              placeholder="0"
-                              value={ds.weights[i] || ''}
-                              onChange={e => updateDs(prev => ({ ...prev, weights: { ...prev.weights, [i]: e.target.value } }))}
-                              style={{ width: '100%', background: '#111', border: '1.5px solid #2a2a2a', borderRadius: 8, padding: '8px 12px', fontSize: 18, fontWeight: 700, color: accent, outline: 'none', boxSizing: 'border-box' }}
-                            />
+                        <div onClick={e => e.stopPropagation()}>
+                          {sug && (
+                            <div style={{ background: sug.action === 'up' ? 'rgba(61,220,132,0.08)' : sug.action === 'deload' ? 'rgba(255,107,53,0.08)' : 'rgba(255,255,255,0.04)', border: `1px solid ${sug.action === 'up' ? 'rgba(61,220,132,0.25)' : sug.action === 'deload' ? 'rgba(255,107,53,0.25)' : '#222'}`, borderRadius: 10, padding: '8px 10px', marginBottom: 10, fontSize: 11, lineHeight: 1.5, color: sug.action === 'up' ? '#3ddc84' : sug.action === 'deload' ? '#ff6b35' : '#999' }}>
+                              <span style={{ fontWeight: 700 }}>{sug.action === 'up' ? '↑ SUBÍ: ' : sug.action === 'deload' ? '↓ DESCARGA: ' : 'HOY: '}</span>
+                              {sug.reason}
+                            </div>
+                          )}
+                          {bestPrev !== null && (
+                            <div style={{ fontSize: 10, color: '#555', marginBottom: 8, fontWeight: 700, letterSpacing: 0.5 }}>1RM ESTIMADO (MEJOR): <span style={{ color: accent }}>{bestPrev} kg</span></div>
+                          )}
+                          <div style={{ display: 'grid', gridTemplateColumns: '38px 1fr 1fr 36px', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                            {['SERIE', 'KG', 'REPS', ''].map(h => (
+                              <div key={h} style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1, color: '#444', textTransform: 'uppercase' }}>{h}</div>
+                            ))}
                           </div>
-                          <div>
-                            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1, color: '#444', marginBottom: 4, textTransform: 'uppercase' }}>RIR</div>
+                          {exSets.map((st, si) => {
+                            const pre = prefillFor(i, si, ex);
+                            return (
+                              <div key={si} style={{ display: 'grid', gridTemplateColumns: '38px 1fr 1fr 36px', gap: 8, alignItems: 'center', marginBottom: 6, opacity: st.done ? 0.6 : 1 }}>
+                                <div className="font-bebas" style={{ fontSize: 18, color: '#555' }}>{si + 1}</div>
+                                <input
+                                  type="number" inputMode="decimal" placeholder={pre.w || '0'}
+                                  value={st.w} onChange={e => editSet(i, si, ex, { w: e.target.value })}
+                                  style={{ width: '100%', background: '#111', border: '1.5px solid #2a2a2a', borderRadius: 8, padding: '8px 10px', fontSize: 16, fontWeight: 700, color: accent, outline: 'none', boxSizing: 'border-box' }}
+                                />
+                                <input
+                                  type="number" inputMode="numeric" placeholder={pre.r || '0'}
+                                  value={st.r} onChange={e => editSet(i, si, ex, { r: e.target.value })}
+                                  style={{ width: '100%', background: '#111', border: '1.5px solid #2a2a2a', borderRadius: 8, padding: '8px 10px', fontSize: 16, fontWeight: 700, color: '#f2f0ea', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                                <button onClick={() => toggleSet(i, si, ex, exercises[i + 1])} aria-label={`Serie ${si + 1} hecha`} style={{
+                                  width: 36, height: 36, borderRadius: '50%',
+                                  border: `2px solid ${st.done ? accent : '#333'}`,
+                                  background: st.done ? accent : 'transparent',
+                                  color: st.done ? '#0a0a0a' : 'transparent',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
+                                }}>✓</button>
+                              </div>
+                            );
+                          })}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '10px 0' }}>
+                            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1, color: '#444', textTransform: 'uppercase' }}>RIR</div>
                             <div style={{ display: 'flex', gap: 4 }}>
                               {[0, 1, 2, 3].map(r => (
                                 <button key={r} onClick={() => updateDs(prev => ({ ...prev, rirs: { ...prev.rirs, [i]: r } }))} style={{
@@ -613,10 +765,21 @@ export default function WorkoutPage() {
 
           {/* Complete Session */}
           <div style={{ padding: '24px 20px 0' }}>
-            <button className="btn-primary" onClick={completeSession} disabled={pct < 100 || saving || sessionDone}
+            <button className="btn-primary" onClick={completeSession} disabled={doneSets === 0 || saving || sessionDone}
               style={{ background: sessionDone ? '#2a2a2a' : undefined, color: sessionDone ? '#555' : undefined }}>
               {saving ? 'GUARDANDO...' : sessionDone ? '✓ SESIÓN COMPLETADA' : 'COMPLETAR SESIÓN'}
             </button>
+            {prHits.length > 0 && (
+              <div style={{ marginTop: 14, background: 'rgba(232,255,71,0.06)', border: '1.5px solid rgba(232,255,71,0.3)', borderRadius: 14, padding: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#e8ff47', marginBottom: 8 }}>🏆 NUEVOS RÉCORDS (1RM ESTIMADO)</div>
+                {prHits.map(h => (
+                  <div key={h.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', color: '#f2f0ea' }}>
+                    <span>{h.name}</span>
+                    <span style={{ fontWeight: 700, color: '#e8ff47' }}>{h.est} kg <span style={{ color: '#666', fontWeight: 400 }}>(antes {h.prev})</span></span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}

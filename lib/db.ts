@@ -127,17 +127,6 @@ export async function getSessionSets(sessionId: string) {
   ` as ExerciseSet[];
 }
 
-export async function getExerciseHistory(userId: string, exerciseName: string, limit = 10) {
-  return await sql`
-    SELECT es.*, ws.session_date
-    FROM exercise_sets es
-    JOIN workout_sessions ws ON ws.id = es.session_id
-    WHERE es.user_id = ${userId} AND es.exercise_name = ${exerciseName}
-    ORDER BY ws.session_date DESC, es.set_number ASC
-    LIMIT ${limit}
-  `;
-}
-
 export async function getWeeklySummary(userId: string) {
   return await sql`
     SELECT * FROM weekly_summary 

@@ -7,6 +7,8 @@ import BottomNav from '@/components/BottomNav';
 type WeightLog = { logged_at: string; weight_kg: number };
 type Session = { week: string; completed: number; total: number; avg_duration: number | null };
 type PR = { exercise_name: string; best_weight: number | null; reps: number | null; created_at: string };
+type LiftSummary = { name: string; sessions: number; best_e1rm: number | null };
+type LiftPoint = { date: string; estimated_1rm: number | null; best_weight: number | null; best_reps: number | null; has_pr: boolean };
 type Measurements = { waist: string; chest: string; hip: string; arm: string; thigh: string; date: string };
 
 const EMPTY_M: Measurements = { waist: '', chest: '', hip: '', arm: '', thigh: '', date: new Date().toISOString().slice(0, 10) };
@@ -25,6 +27,11 @@ export default function ProgressPage() {
   const [weightNote, setWeightNote] = useState('');
   const [savingWeight, setSavingWeight] = useState(false);
   const [weightError, setWeightError] = useState('');
+
+  // Fuerza: 1RM estimado por ejercicio
+  const [lifts, setLifts] = useState<LiftSummary[]>([]);
+  const [liftName, setLiftName] = useState('');
+  const [liftPoints, setLiftPoints] = useState<LiftPoint[]>([]);
 
   // Body measurements (localStorage)
   const [measurements, setMeasurements] = useState<Measurements[]>([]);
@@ -58,6 +65,28 @@ export default function ProgressPage() {
     } catch {}
     setDataLoading(false);
   }
+
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/exercises?list=1')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        const list: LiftSummary[] = (d?.exercises ?? []).filter((x: LiftSummary) => x.best_e1rm !== null);
+        setLifts(list);
+        if (list.length) setLiftName(n => n || list[0].name);
+      })
+      .catch(() => {});
+  }, [user]);
+
+  useEffect(() => {
+    if (!liftName) return;
+    let cancelled = false;
+    fetch(`/api/exercises?name=${encodeURIComponent(liftName)}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!cancelled) setLiftPoints((d?.history ?? []).filter((p: LiftPoint) => p.estimated_1rm !== null)); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [liftName]);
 
   async function saveWeight(e: React.FormEvent) {
     e.preventDefault();
@@ -258,6 +287,51 @@ export default function ProgressPage() {
           </div>
         )}
       </div>
+
+      {/* 1RM estimado por ejercicio */}
+      {lifts.length > 0 && (
+        <div style={{ margin: '16px 20px 0' }}>
+          <div className="section-label" style={{ marginBottom: 12 }}>FUERZA — 1RM ESTIMADO</div>
+          <div className="card" style={{ padding: '14px 12px' }}>
+            <select value={liftName} onChange={e => setLiftName(e.target.value)} style={{ width: '100%', marginBottom: 12 }}>
+              {lifts.map(l => <option key={l.name} value={l.name}>{l.name} — {l.best_e1rm} kg</option>)}
+            </select>
+            {liftPoints.length > 0 ? (() => {
+              const vals = liftPoints.map(p => Number(p.estimated_1rm));
+              const lo = Math.min(...vals);
+              const hi = Math.max(...vals);
+              const span = hi - lo || 1;
+              const first = vals[0];
+              const last = vals[vals.length - 1];
+              return (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 90 }}>
+                    {liftPoints.map((p, i) => {
+                      const h = Math.max(10, ((Number(p.estimated_1rm) - lo) / span) * 70 + 14);
+                      return (
+                        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: 3, height: '100%' }}>
+                          <div style={{ fontSize: 8, color: '#666', fontWeight: 700 }}>{p.estimated_1rm}</div>
+                          <div style={{ width: '100%', background: p.has_pr ? '#3ddc84' : '#e8ff47', borderRadius: '3px 3px 0 0', height: h, opacity: i === liftPoints.length - 1 ? 1 : 0.5 }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, color: '#444' }}>
+                    <span>{liftPoints[0].date.slice(5)}</span>
+                    <span style={{ color: last >= first ? '#3ddc84' : '#ff6b6b', fontWeight: 700 }}>{last >= first ? '+' : ''}{(last - first).toFixed(1)} kg</span>
+                    <span>{liftPoints[liftPoints.length - 1].date.slice(5)}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: '#555', marginTop: 8, lineHeight: 1.6 }}>
+                    Mejor serie de cada sesión (Epley, hasta 12 reps). Verde = nuevo récord.
+                  </div>
+                </>
+              );
+            })() : (
+              <div style={{ fontSize: 12, color: '#444', textAlign: 'center', padding: 12 }}>Sin datos todavía.</div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Personal Records — strength progression */}
       {prs.length > 0 && (
